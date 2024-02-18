@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Portfolio Website</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://kit.fontawesome.com/cd7909d44e.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div id="header">
+        <div class="container">
+            <nav>
+                <img src="images/logo.png" class="logo">
+                <ul id="sidemenu">
+                    <li><a href="#header">Home</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#portfolio">Portfolio</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                    <i class="fas fa-times" onclick="closemenu()"></i>
+                </ul>
+                <i class="fas fa-bars" onclick="openmenu()"></i>
+            </nav>
+            <div class="header-text">
+                <p>Data Scientist | Data Automation Expert</p>
+                <h1>Hi, I'm <span>Steven</span> <br>Manz From North Carolina.</h1>
+                <!--<p>I thrive on transforming complex data into actionable insights and automating the mundane to unlock creativity and efficiency. Let's explore the power of data together.</p>-->
+            </div>
+        </div>
+    </div>
+    <!-- -----------about---------- -->
+    <div id="about">
+        <div class="container">
+            <div class="row">
+                <div class="about-col-1">
+                    <img src="images/placeholder-user.JPG">
+                </div>
+                <div class="about-col-2">
+                    <h1 class="sub-title">About Me</h1>
+                    <p>Merging Electrical Engineering's precision with Data Science's vast potential, my path showcases a dedication to innovation and knowledge. <br>With a foundation from Clemson University and practical experience at Wolfspeed, I've leveraged data to streamline processes and open new vistas. <br>My expertise extends from mastering complex systems to pioneering with data, aiming to deepen my data science proficiency and impact through innovative solutions. <br><br>I'm eager to explore new challenges and opportunities in Data Science, pushing the limits and contributing to technological advancement.</p>
+
+                    <div class="tab-titles">
+                        <p class="tab-links active-link" onclick="opentab('skills')">Skills</p>
+                        <p class="tab-links" onclick="opentab('experience')">Experience</p>
+                        <p class="tab-links" onclick="opentab('education')">Education</p>
+                    </div>
+                    <div class="tab-contents active-tab" id="skills">
+                        <ul>
+                            <li><span>Data Analysis & Automation</span><br>Expertise in Python, SQL, and Machine Learning</li>
+                            <li><span>Full-Stack Development</span><br>Proficiency in PyQt5 for GUI development, and KLayout API for design automation</li>
+                            <li><span>Project Leadership</span><br>Leading teams in high-stakes environments to deliver innovative solutions</li>
+                        </ul>
+                    </div>
+                    <div class="tab-contents" id="experience">
+                        <ul>
+                            <li><span>Feb 2024 - Present</span><br>Data Scientist at Caterpillar CMDC.</li>
+                            <li><span>Jan 2021 - Jan 2024</span><br>Electrical Engineer II at Wolfspeed, NC. Spearheaded automated high-power test platform development and data analysis integration projects.</li>
+                            <li><span>May 2020 - Aug 2020</span><br>Optical/Electrical Engineer Intern at Scinovia Corp, Raleigh, NC. Focused on cutting-edge blood flow analysis and device enhancement.</li>
+                        </ul>
+                    </div>
+                    <div class="tab-contents" id="education">
+                        <ul>
+                            <li><span>Dec 2020</span><br>M.S. in Electrical Engineering from Clemson University, SC. Focus in Photonics and Applied Electromagnetics.</li>
+                            <li><span>July 2018</span><br>B.S. in Applied Physics from Coastal Carolina University, SC. Focus in Engineering and Mathematics.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------services---------------- -->
+    <div id="services">
+        <div class="container">
+            <h1 class="sub-title">My Services</h1>
+            <div class="services-list">
+                <div>
+                    <i class="fas fa-network-wired"></i>
+                    <h2>Data Automation</h2>
+                    <p>Specializing in automating data processes to enhance efficiency and accuracy. Expert in developing high-power test platforms and integrating complex data analysis with tools like Python, SQL, and MATLAB.</p>
+                    <a href="#">Learn more</a>
+                </div>
+                <div>
+                    <i class="fas fa-database"></i>
+                    <h2>Data Management & Analysis</h2>
+                    <p>Expert in managing extensive datasets, performing ETL operations, and utilizing Power BI for insightful data visualization. Skilled in Python, Pandas, NumPy, and SQL for comprehensive data analysis.</p>
+                    <a href="#">Learn more</a>
+                </div>
+                <div>
+                    <i class="fas fa-brain"></i>
+                    <h2>Machine Learning & AI</h2>
+                    <p>Developing and deploying machine learning models to solve real-world problems. Proficient in Python, PyTorch, TensorFlow, and scikit-learn, focusing on binary and multiclass systems for predictive analysis and automation.</p>
+                    <a href="#">Learn more</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ----------portfolio------------ -->
+    <div id="portfolio">
+        <div class="container">
+            <h1 class="sub-title">Portfolio</h1>
+
+            <!-- Entrepreneurial Ventures -->
+            <h2 class="portfolio-category"><span class="text-secondary">Entrepreneurial Ventures</span></h2>
+            <div class="work-list">
+                <div class="work special-highlight">
+                    <img src="images/github-crm-project.png">
+                    <div class="layer">
+                        <h3><span class="text-primary">ManzCreations CRM</span></h3>
+                        <p><span class="text-content">An innovative Customer Relationship Management system designed to enhance business workflows. Developed with a focus on usability and efficiency. Check it out on GitHub.</span></p>
+                        <a href="https://github.com/ManzCreations/ManzCreations-CRM" target="_blank" class="github-link"><i class="fab fa-github"></i>View on GitHub</a>
+                    </div>
+                </div>
+                <!-- New Project Entry for Automatic Invoicing -->
+                <div class="work">
+                    <img src="images/auto-invoicing-project.png"> <!-- Update with actual image path -->
+                    <div class="layer">
+                        <h3><span class="text-primary">Automatic Invoicing for LINE Properties</span></h3>
+                        <p><span class="text-content">Developed a data automation tool for streamlining bookkeeping processes related to Airbnb and VRBO. This Python-based tool efficiently manages and processes QuickBooks-generated Excel files by organizing data, generating invoices, and creating journal entries, significantly reducing workload by a week for each client monthly.</span></p>
+                        <a href="https://github.com/ManzCreations/Automatic-Invoicing-for-LINE-Properties" target="_blank" class="github-link"><i class="fab fa-github"></i>View on GitHub</a>
+                    </div>
+                </div>
+                <!-- Email Detection and Movement Application Entry -->
+                <div class="work">
+                    <img src="images/email-detection-project.png"> <!-- Update with actual image path -->
+                    <div class="layer">
+                        <h3><span class="text-primary">Email Detection and Movement Application</span></h3>
+                        <p><span class="text-content">Developed a Python-based email management application leveraging libraries such as PyQt5, PyTorch, and Pandas. Features include hourly email checking via Windows Task Scheduler, spam classification through machine learning, flexible folder management, and secure email key generation for two-factor authentication systems. This tool significantly enhances email sorting and security protocols.</span></p>
+                        <a href="https://github.com/ManzCreations/Email-Detection-and-Movement-Application" target="_blank" class="github-link"><i class="fab fa-github"></i>View on GitHub</a>
+                    </div>
+                </div>
+            </div>
+            <a href="https://github.com/ManzCreations" class="btn">See more</a>
+
+            <!-- Professional Experience -->
+            <h2 class="portfolio-category"><span class="text-secondary">Professional Experience</span></h2>
+            <div class="work-list">
+                <!-- Automated High Power Test Strategy -->
+                <div class="work">
+                    <img src="images/high-power-test.png"> <!-- Update with actual image path -->
+                    <div class="layer">
+                        <h3><span class="text-primary">Automated High Power Test Strategy</span></h3>
+                        <p><span class="text-content">A comprehensive Python-based test setup using PyVISA for interfacing with key test instruments. Features threading for real-time temperature assessments via thermal camera integration.</span></p>
+                    </div>
+                </div>
+                
+                <!-- Automated Device Parameter Extraction Tool -->
+                <div class="work">
+                    <img src="images/klayout-extract.png"> <!-- Update with actual image path -->
+                    <div class="layer">
+                        <h3><span class="text-primary">Automated Device Parameter Extraction Tool</span></h3>
+                        <p><span class="text-content">Led development of a Python tool with PyQt5 and KLayout API for extracting device parameters, enhancing design process efficiency with a user-friendly interface.</span></p>
+                    </div>
+                </div>
+                
+                <!-- Compact Model Parameter Extraction Application -->
+                <div class="work">
+                    <img src="images/compact-model-extract.png"> <!-- Update with actual image path -->
+                    <div class="layer">
+                        <h3><span class="text-primary">Compact Model Parameter Extraction Application</span></h3>
+                        <p><span class="text-content">Developed a MATLAB application for simulating and optimizing parameters of Wolfspeed MOSFET devices, integrating LTSpice and MATLAB for accurate device modeling.</span></p>
+                    </div>
+                </div>
+                
+                <!-- xSEM Image Junction Potential Characterization -->
+                <div class="work">
+                    <img src="images/junction-potential.png"> <!-- Update with actual image path -->
+                    <div class="layer">
+                        <h3><span class="text-primary">xSEM Image Junction Potential Characterization</span></h3>
+                        <p><span class="text-content">Utilized MATLAB for SiC wafer potential analysis based on doping concentration, streamlining potential profile reporting within selected ROIs.</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <a href="resources/all_projects.pdf" target="_blank" class="btn">See more</a>
+
+            <!-- Academic Projects -->
+            <h2 class="portfolio-category"><span class="text-secondary">Academic and Hobby Projects</span></h2>
+            <div class="work-list">
+                <!-- Free Facebook Ad Bot -->
+                <div class="work">
+                    <img src="images/facebook-bot.png"> <!-- Update with actual image path -->
+                    <div class="layer">
+                        <h3><span class="text-primary">Free Facebook Ad Bot</span></h3>
+                        <p><span class="text-content">A Python bot that periodically checks Facebook Ads for free items based on user-defined keywords, sending email notifications for new findings. Configured via JSON.</span></p>
+                    </div>
+                </div>
+                <!-- Allocated Bourbon Finder Bot -->
+                <div class="work">
+                    <img src="images/bourbon-bot.png"> <!-- Update with actual image path -->
+                    <div class="layer">
+                        <h3><span class="text-primary">Allocated Bourbon Finder Bot</span></h3>
+                        <p><span class="text-content">Python bot for tracking the availability of specific bourbon brands across stores, generating Excel reports on stock status.</span></p>
+                    </div>
+                </div>
+                <!-- Recipe Generator Bot -->
+                <div class="work">
+                    <img src="images/recipe-finder.png"> <!-- Update with actual image path -->
+                    <div class="layer">
+                        <h3><span class="text-primary">Recipe Generator Bot</span></h3>
+                        <p><span class="text-content">Utilizes a database of recipes and user-provided ingredients to suggest possible meals, simplifying meal planning.</span></p>
+                    </div>
+                </div>
+                <!-- Drowsy Detector -->
+                <div class="work">
+                    <img src="images/drowsy-detector.png"> <!-- Update with actual image path -->
+                    <div class="layer">
+                        <h3><span class="text-primary">Drowsy Detector</span></h3>
+                        <p><span class="text-content">A tool designed to detect user drowsiness and send alerts, enhancing safety through computer vision and alert systems.</span></p>
+                    </div>
+                </div>
+                <!-- Master’s Thesis: An Efficient Distance Tracking Algorithm -->
+                <div class="work">
+                    <img src="images/distance-tracker.png"> <!-- Update with actual image path -->
+                    <div class="layer">
+                        <h3><span class="text-primary">Master’s Thesis: Distance Tracking Algorithm</span></h3>
+                        <p><span class="text-content">Developed a MATLAB-based algorithm for distance tracking in biomedical imaging, with practical applications in surgery and diagnostics.</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <a href="resources/all_projects.pdf" target="_blank" class="btn">See more</a>
+        </div>
+    </div>
+    <!-- ----------contact------------- -->
+    <div id="contact">
+        <div class="container">
+            <div class="row">
+                <div class="contact-left">
+                    <h1 class="sub-title">Let's Connect</h1>
+                    <p>Interested in leveraging data to drive insights and innovation? I’d love to hear from you.</p>
+                    <p><i class="fas fa-envelope"></i> stevenmanz063018@gmail.com</p>
+                    <p><i class="fas fa-mobile-alt"></i> +1 (423) 767-1092 </p>
+                    <div class="social-icons">
+                        <a href="https://www.linkedin.com/in/steven-manz/"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://github.com/ManzCreations"><i class="fab fa-github"></i></a>
+                    </div>
+                    <a href="resources/resume.pdf" download class="btn btn2">Download My Resume</a>
+                </div>
+                <div class="contact-right">
+                    <form name="submit-to-google-sheet">
+                        <input type="text" name="Name" placeholder="Your Name" required>
+                        <input type="email" name="Email" placeholder="Your Email" required>
+                        <textarea name="Message" rows="6" placeholder="How can I help with your data needs?"></textarea>
+                        <button type="submit" class="btn btn2">Send Message</button>
+                    </form>
+                    <span id="msg"></span>
+                </div>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>Copyright © Kevin. Made wtih <i class="fas fa-heart"></i> by <a href="https://www.youtube.com/channel/UCkjoHfkLEy7ZT4bA2myJ8xA?sub_confirmation=1">Easy Tutorials</a></p>
+        </div>
+    </div>
+    
+    <!-- ----------loading screen------------- -->
+    <div id="loading" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;">
+        <div class="loader"></div>
+    </div>
+
+    <script>
+
+        var tablinks = document.getElementsByClassName("tab-links");
+        var tabcontents = document.getElementsByClassName("tab-contents");
+    
+        function opentab(tabname){
+            for(tablink of tablinks){
+                tablink.classList.remove("active-link");
+            }
+            for(tabcontent of tabcontents){
+                tabcontent.classList.remove("active-tab");
+            }
+            event.currentTarget.classList.add("active-link");
+            document.getElementById(tabname).classList.add("active-tab");
+        }
+    
+    </script>
+    
+    <script>
+    
+        var sidemeu = document.getElementById("sidemenu");
+    
+        function openmenu(){
+            sidemeu.style.right = "0";
+        }
+        function closemenu(){
+            sidemeu.style.right = "-200px";
+        }
+    
+    </script>
+
+    <script>
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbz9JuBIeiTYOLHQc8Y6NU2z6ReFZWCrL2ovwCMvndhyPPuG_g26E0vWIkRicp4x5xy-/exec';
+        const form = document.forms['submit-to-google-sheet'];
+        const msg = document.getElementById("msg");
+        const loading = document.getElementById("loading"); // Get the loading div
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            loading.style.display = "flex"; // Show loading indicator
+            fetch(scriptURL, { method: 'POST', body: new FormData(form)})
+                .then(response => {
+                    msg.innerHTML = "Message sent successfully";
+                    setTimeout(function(){
+                        msg.innerHTML = "";
+                    },5000);
+                    form.reset();
+                })
+                .catch(error => console.error('Error!', error.message))
+                .finally(() => {
+                    loading.style.display = "none"; // Hide loading indicator
+                });
+        });
+    </script>
+
+    <script>
+        window.addEventListener('load', function() {
+            var img = new Image();
+            img.onload = function() {
+                document.getElementById('header').style.backgroundImage = 'url(images/background.png)';
+            }
+            img.src = 'images/background.png'; // High-resolution version
+        });
+    </script>
+    
+</body>
+</html>
