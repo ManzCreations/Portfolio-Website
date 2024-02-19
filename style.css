@@ -1,12 +1,18 @@
 :root {
-    --primary-color: #00d5ff;
-    --secondary-color: #64bfd1;
-    --text-color: #fff;
-    --main-background-color: #080808;
-    --about-me-background-color: #ababab;
-    --other-background-color: #262626;
-    --msg-color: #61b752;
+    --primary-color: #00d5ff; /* Bright accent color remains unchanged */
+    --secondary-color: #64bfd1; /* Soft accent color remains unchanged */
+    --text-color: #fff; /* Text color remains unchanged */
+    --main-background-color: #080808; /* Main background color remains unchanged */
+    --header-background-color: #102A43; /* A deeper navy blue for a bold, sophisticated header */
+    --about-me-background-color: #2B4162; /* A rich indigo for the about me section, providing depth */
+    --services-background-color: #3F4C6B; /* A muted slate blue for services, ensuring readability */
+    --portfolio-background-color: #5A6F8C; /* A lighter shade of blue-grey for the portfolio, adding contrast */
+    --contact-background-color: #080808; /* Contact section color remains unchanged */
+    --footer-background-color: #283e50; /* Footer color remains unchanged */
+    --msg-color: #61b752; /* Message color remains unchanged */
 }
+
+
 
 *{
     margin: 0;
@@ -28,6 +34,7 @@ body{
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
+    background-color: var(--header-background-color);
 }
 .container{
     padding: 10px 10%;
@@ -83,7 +90,8 @@ nav ul li a:hover::after{
 /* -----------about--------------- */
 #about{
     padding: 80px 0;
-    color: var(--about-me-background-color);
+    background-color: var(--about-me-background-color);
+    color: var(--text-color);
 }
 .row{
     display: flex;
@@ -152,6 +160,8 @@ nav ul li a:hover::after{
 /* ----------------services------------- */
 #services{
     padding: 30px 0;
+    background-color: var(--services-background-color);
+    color: var(--text-color);
 }
 .services-list{
     display: grid;
@@ -160,7 +170,7 @@ nav ul li a:hover::after{
     margin-top: 50px;
 }
 .services-list div{
-    background: var(--other-background-color);
+    background: var(--services-background-color);
     padding: 40px;
     font-size: 13px;
     font-weight: 300;
@@ -190,6 +200,8 @@ nav ul li a:hover::after{
 /* -------portfolio----------- */
 #portfolio{
     padding: 50px 0;
+    background-color: var(--portfolio-background-color);
+    color: var(--text-color);
 }
 .work-list{
     display: grid;
@@ -309,14 +321,21 @@ nav ul li a:hover::after{
     margin-top: 2rem; /* Adds space above the 'See more' button */
 }
 /* ---------contact-------- */
+.contact-left h1.sub-title {
+    color: var(--text-color); /* Ensures the title stands out */
+    margin-bottom: 20px; /* Adds space below the title */
+}
 .contact-left{
     flex-basis: 35%;
+    background-color: var(--contact-background-color);
 }
 .contact-right{
     flex-basis: 60%;
+    background-color: var(--contact-background-color);
 }
 .contact-left p{
     margin-top: 30px;
+    color: var(--text-color); /* Improves readability */
 }
 .contact-left p i{
     color: var(--primary-color);
@@ -330,29 +349,36 @@ nav ul li a:hover::after{
     text-decoration: none;
     font-size: 30px;
     margin-right: 15px;
-    color: var(--about-me-background-color);
+    color: var(--primary-color); /* Ensures icons fit the theme */
+    transition: color 0.3s ease; /* Smooth transition on hover */
     display: inline-block;
-    transition: transform 0.5s;
 }
 .social-icons a:hover{
-    color: var(--primary-color);
+    color: var(--secondary-color); /* Changes color on hover for interaction feedback */
     transform: translateY(-5px);
 }
 .btn.btn2{
-    display: inline-block;
-    background: var(--primary-color);
+    background-color: var(--primary-color); /* Primary button color */
+    color: var(--main-background-color); /* Text color */
+    border: none; /* Removes border */
+    transition: background-color 0.3s ease; /* Smooth transition on hover */
+}
+.btn.btn2:hover {
+    background-color: var(--secondary-color); /* Changes background on hover */
 }
 .contact-right form{
     width: 100%;
 }
 form input, form textarea{
+    background-color: var(--other-background-color); /* Background color */
+    color: var(--text-color); /* Text color */
+    border: 1px solid var(--secondary-color); /* Adds a subtle border */
+    margin-bottom: 15px; /* Adds space below each field */
+    padding: 12px; /* Increases padding for better readability */
     width: 100%;
-    border: 0;
     outline: none;
     background: var(--other-background-color);
-    padding: 15px;
     margin: 15px 0;
-    color: var(--text-color);
     font-size: 18px;
     border-radius: 6px;
 }
@@ -361,12 +387,14 @@ form .btn2{
     font-size: 18px;
     margin-top: 20px;
     cursor: pointer;
+    width: 100%; /* Makes the button full width */
 }
 .copyright{
     width: 100%;
     text-align: center;
     padding: 25px 0;
-    background: var(--other-background-color);
+    background-color: var(--footer-background-color);
+    color: var(--text-color);
     font-weight: 300;
     margin-top: 20px;
 }
@@ -376,6 +404,23 @@ form .btn2{
 .copyright a{
     color: var(--primary-color);
     text-decoration: none;
+}
+footer{
+    background-color: var(--footer-background-color);
+    color: var(--text-color);
+}
+/* Ensuring responsiveness and alignment */
+.row {
+    display: flex;
+    align-items: start; /* Aligns items at the start of the container */
+    justify-content: space-between; /* Spaces out the left and right sections */
+    flex-wrap: wrap; /* Allows items to wrap on smaller screens */
+}
+
+.contact-left, .contact-right {
+    flex: 1; /* Allows both sides to grow equally */
+    min-width: 280px; /* Ensures elements don't get too small on narrow screens */
+    margin: 10px; /* Adds spacing around elements */
 }
 /* -----------------loading circle--------- */
 .loader {
