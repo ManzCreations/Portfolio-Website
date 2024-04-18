@@ -293,7 +293,7 @@ nav ul li a:hover::after{
 .text-primary {
     color: var(--text-color); /* Keep text color white for maximum contrast */
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Adds a dark shadow for better legibility */
-    font-size: 24px;
+    font-size: 18px;
 }
 
 .text-secondary {
