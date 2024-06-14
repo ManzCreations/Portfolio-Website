@@ -23,10 +23,25 @@
                 </ul>
                 <i class="fas fa-bars" onclick="openmenu()"></i>
             </nav>
-            <div class="header-text">
-                <p>Data Scientist | Data Automation Expert</p>
-                <h1>Hi, I'm <span>Steven</span> <br>Manz From North Carolina.</h1>
-                <!--<p>I thrive on transforming complex data into actionable insights and automating the mundane to unlock creativity and efficiency. Let's explore the power of data together.</p>-->
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>Transforming <span class="highlight">Data</span>, Automating <span class="highlight">Processes</span>, Saving <span class="highlight">Time</span> & <span class="highlight">Money</span></h1>
+                    <p>Hi, I'm <span>Steven Manz</span>, a Data Scientist from North Carolina.</p>
+                    <p>I specialize in leveraging data and automation to drive <span class="highlight">efficiency</span> and <span class="highlight">cost savings</span> for businesses.</p>
+                </div>
+                <div class="counter-section">
+                    <div class="counter">
+                        <h3>Time Saved</h3>
+                        <p id="time-saved">0y 0d 0h</p>
+                    </div>
+                    <div class="counter">
+                        <h3>Money Saved</h3>
+                        <p>
+                            <span id="realized-savings">$0</span> (Realized)<br>
+                            <span id="project-savings">$0</span> (Projects)
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -139,7 +154,9 @@
                     <div class="layer">
                         <h3><span class="text-primary">ManzCreations CRM</span></h3>
                         <p><span class="text-content">An innovative Customer Relationship Management system designed to enhance business workflows. Developed with a focus on usability and efficiency.</span></p>
-                        <a href="resources/CRM_SorTek/ManzCreationsCRM_WINDOWS_2.1.exe" download class="download-link"><i class="fas fa-download"></i>Download Executable</a>
+                        <a href="resources/CRM_SorTek                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               aaaaaaasswwwwwwss   0243052?0 dddddddddddddddddddddddddddddddddddddddddddddd d dddddd e     WQ76T+
+
+                        +++.+/ManzCreationsCRM_WINDOWS_2.1.exe" download class="download-link"><i class="fas fa-download"></i>Download Executable</a>
                     </div>
                 </div>
 
@@ -161,8 +178,8 @@
                 <div class="work">
                     <img src="images/iot-data-automation.png">
                     <div class="layer">
-                        <h3><span class="text-primary">IoT Data Automation Project</span></h3>
-                        <p><span class="text-content">Developed a Python-based data automation solution for IoT devices, streamlining data collection, processing, and visualization.</span></p>
+                        <h3><span class="text-primary">Workload Prediction</span></h3>
+                        <p><span class="text-content">Python-based solution simulating program workloads using Gaussian distribution, optimizing parameters, and employing a clustering model for performance prediction.</span></p>
                     </div>
                 </div>
 
@@ -362,6 +379,47 @@
             img.src = 'images/background.png'; // High-resolution version
         });
     </script>
+
+<script>
+    // Counter variables
+    let weeklySaveRate = 100; // Hours saved per week
+    let lastRefreshDate = new Date('2023-06-01'); // Set the last refresh date here
+    let currentSaveTotal = 7500; // Total hours saved as of the last refresh date
+    let hourlyWageRate = 50; // Hourly wage rate for engineers
+    let projectSavings = 2000000; // Money saved from projects you are involved in
+
+    // Function to calculate the time difference in days
+    function daysDiff(date1, date2) {
+        const oneDay = 24 * 60 * 60 * 1000; // hours * minutes * seconds * milliseconds
+        const diffDays = Math.round(Math.abs((date2 - date1) / oneDay));
+        return diffDays;
+    }
+
+    // Calculate the total time saved
+    function calculateTotalTimeSaved() {
+        const currentDate = new Date();
+        const daysDifference = daysDiff(lastRefreshDate, currentDate);
+        const additionalSavedHours = Math.floor((daysDifference / 7) * weeklySaveRate);
+        const totalSavedHours = currentSaveTotal + additionalSavedHours;
+        return totalSavedHours;
+    }
+
+    // Update the counter display
+    function updateCounterDisplay() {
+        const totalSavedHours = calculateTotalTimeSaved();
+        const savedYears = Math.floor(totalSavedHours / (24 * 365));
+        const savedDays = Math.floor((totalSavedHours % (24 * 365)) / 24);
+        const savedHours = totalSavedHours % 24;
+        document.getElementById('time-saved').textContent = `${savedYears}y ${savedDays}d ${savedHours}h`;
+
+        const realizedSavings = totalSavedHours * hourlyWageRate;
+        document.getElementById('realized-savings').textContent = '$' + realizedSavings.toLocaleString();
+        document.getElementById('project-savings').textContent = '$' + projectSavings.toLocaleString();
+    }
+
+    // Update the counter every second
+    setInterval(updateCounterDisplay, 1000);
+</script>
     
 </body>
 </html>
