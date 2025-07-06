@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Manager - Steven Manz</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://kit.fontawesome.com/cd7909d44e.js" crossorigin="anonymous"></script>
+    <style>
+        /* Recipe-specific styles */
+        .recipe-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .recipe-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 0;
+        }
+
+        .recipe-header h1 {
+            font-size: 48px;
+            color: var(--primary-color, #00d5ff);
+            margin-bottom: 20px;
+        }
+
+        .recipe-header p {
+            font-size: 18px;
+            color: var(--text-color, #333);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .recipe-controls {
+            background: var(--about-me-background-color, #f8f9fa);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 15px rgba(0, 213, 255, 0.1);
+        }
+
+        .url-input-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .url-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px 20px;
+            border: 2px solid var(--secondary-color, #007bb5);
+            border-radius: 8px;
+            background: var(--main-background-color, #fff);
+            color: var(--text-color, #333);
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .url-input:focus {
+            border-color: var(--primary-color, #00d5ff);
+        }
+
+        .add-recipe-btn {
+            padding: 15px 30px;
+            background: var(--primary-color, #00d5ff);
+            color: var(--main-background-color, #fff);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        .add-recipe-btn:hover {
+            background: var(--secondary-color, #007bb5);
+            transform: translateY(-2px);
+        }
+
+        .add-recipe-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Debug Panel Styles */
+        .debug-panel {
+            background: #1e1e1e;
+            color: #ffffff;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #444;
+            overflow: hidden;
+        }
+
+        .debug-header {
+            background: #2d2d2d;
+            padding: 15px 20px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .debug-title {
+            font-weight: bold;
+            color: #00d5ff;
+        }
+
+        .debug-toggle {
+            background: #007bb5;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .debug-content {
+            padding: 15px 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .debug-log {
+            margin: 5px 0;
+            padding: 5px 0;
+        }
+
+        .debug-log.success {
+            color: #4CAF50;
+        }
+
+        .debug-log.warning {
+            color: #FF9800;
+        }
+
+        .debug-log.error {
+            color: #f44336;
+        }
+
+        .debug-log.info {
+            color: #2196F3;
+        }
+
+        .debug-timestamp {
+            color: #888;
+            font-size: 11px;
+        }
+
+        .debug-data {
+            background: #2d2d2d;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 3px solid #00d5ff;
+        }
+
+        .debug-step {
+            background: #2a2a2a;
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 5px;
+            border-left: 3px solid #4CAF50;
+        }
+
+        .debug-step.failed {
+            border-left-color: #f44336;
+        }
+
+        .extraction-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+            padding: 15px;
+            background: #2d2d2d;
+            border-radius: 8px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: #3d3d3d;
+            border-radius: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00d5ff;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .recipe-card {
+            background: var(--services-background-color, #f8f9fa);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 213, 255, 0.2);
+        }
+
+        .recipe-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: var(--portfolio-background-color, #eee);
+        }
+
+        .recipe-card-content {
+            padding: 20px;
+        }
+
+        .recipe-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-color, #00d5ff);
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .recipe-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: var(--secondary-color, #007bb5);
+        }
+
+        .recipe-description {
+            font-size: 14px;
+            color: var(--text-color, #333);
+            line-height: 1.5;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .recipe-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #ff3742;
+        }
+
+        .view-btn {
+            background: var(--primary-color, #00d5ff);
+            color: var(--main-background-color, #fff);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .view-btn:hover {
+            background: var(--secondary-color, #007bb5);
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: var(--main-background-color, #fff);
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal-header {
+            background: var(--primary-color, #00d5ff);
+            color: var(--main-background-color, #fff);
+            padding: 20px 30px;
+            border-radius: 15px 15px 0 0;
+            position: relative;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            padding-right: 40px;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--main-background-color, #fff);
+            transition: opacity 0.3s ease;
+        }
+
+        .close:hover {
+            opacity: 0.7;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .recipe-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .ingredients-section, .instructions-section {
+            background: var(--about-me-background-color, #f8f9fa);
+            padding: 25px;
+            border-radius: 10px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: var(--primary-color, #00d5ff);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ingredients-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .ingredients-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--services-background-color, #f8f9fa);
+            color: var(--text-color, #333);
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .ingredients-list li:before {
+            content: "•";
+            color: var(--primary-color, #00d5ff);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        .instructions-list {
+            counter-reset: step-counter;
+            list-style: none;
+            padding: 0;
+        }
+
+        .instructions-list li {
+            counter-increment: step-counter;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: var(--services-background-color, #f8f9fa);
+            border-radius: 8px;
+            color: var(--text-color, #333);
+            position: relative;
+            padding-left: 50px;
+        }
+
+        .instructions-list li:before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            background: var(--primary-color, #00d5ff);
+            color: var(--main-background-color, #fff);
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--primary-color, #00d5ff);
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--secondary-color, #007bb5);
+            border-top: 2px solid var(--primary-color, #00d5ff);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .error-message {
+            background: #ff4757;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .success-message {
+            background: #2ed573;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--secondary-color, #007bb5);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive design */
+        @media only screen and (max-width: 768px) {
+            .recipe-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .url-input-section {
+                flex-direction: column;
+            }
+            
+            .modal-content {
+                margin: 5% auto;
+                width: 95%;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+
+            .extraction-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .debug-content {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="header" style="height: auto; min-height: 20vh; background-attachment: scroll;">
+        <div class="container">
+            <nav>
+                <img src="images/logo.png" class="logo">
+                <ul id="sidemenu">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="index.html#about">About</a></li>
+                    <li><a href="index.html#services">Services</a></li>
+                    <li><a href="index.html#portfolio">Portfolio</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                    <li><a href="recipes.html" class="active">Recipes</a></li>
+                    <i class="fas fa-times" onclick="closemenu()"></i>
+                </ul>
+                <i class="fas fa-bars" onclick="openmenu()"></i>
+            </nav>
+        </div>
+    </div>
+
+    <div class="recipe-container">
+        <div class="recipe-header">
+            <h1><i class="fas fa-utensils"></i> Recipe Manager</h1>
+            <p>Add, organize, and manage your favorite dinner recipes. Simply paste a recipe URL to automatically extract ingredients and cooking instructions.</p>
+        </div>
+
+        <div class="recipe-controls">
+            <div class="url-input-section">
+                <input type="url" id="recipeUrl" class="url-input" placeholder="Paste recipe URL here (e.g., https://allrecipes.com/recipe/...)">
+                <button id="addRecipeBtn" class="add-recipe-btn">
+                    <i class="fas fa-plus"></i> Add Recipe
+                </button>
+            </div>
+            <div id="messageContainer"></div>
+
+            <!-- Debug Panel -->
+            <div id="debugPanel" class="debug-panel" style="display: none;">
+                <div class="debug-header">
+                    <span class="debug-title">🔧 Recipe Extraction Debug Console</span>
+                    <button class="debug-toggle" onclick="toggleDebugContent()">Hide Details</button>
+                </div>
+                <div id="debugContent" class="debug-content">
+                    <div id="debugLogs"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="recipesContainer">
+            <div id="loadingRecipes" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <span>Loading recipes...</span>
+            </div>
+            <div id="recipeGrid" class="recipe-grid"></div>
+        </div>
+    </div>
+
+    <!-- Recipe Modal -->
+    <div id="recipeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle" class="modal-title"></h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Recipe content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Try multiple CORS proxies for better reliability
+        const CORS_PROXIES = [
+            'https://api.allorigins.win/raw?url=',
+            'https://corsproxy.io/?',
+            'https://cors-anywhere.herokuapp.com/'
+        ];
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+        
+        // Set this to false to use Google Sheets, true to use localStorage for testing
+        const USE_LOCAL_STORAGE = true;
+        
+        // Global variables
+        let recipes = [];
+        let debugLogEntries = [];
+        let extractionStats = {
+            totalAttempts: 0,
+            successfulExtractions: 0,
+            strategiesUsed: {},
+            errors: [],
+            performance: {}
+        };
+        
+        // DOM elements
+        const recipeUrlInput = document.getElementById('recipeUrl');
+        const addRecipeBtn = document.getElementById('addRecipeBtn');
+        const messageContainer = document.getElementById('messageContainer');
+        const recipeGrid = document.getElementById('recipeGrid');
+        const loadingRecipes = document.getElementById('loadingRecipes');
+        const modal = document.getElementById('recipeModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const debugPanel = document.getElementById('debugPanel');
+        const debugLogsContainer = document.getElementById('debugLogs');
+
+        // Debug logging functions
+        function debugLog(message, type = 'info', data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = {
+                timestamp,
+                message,
+                type,
+                data
+            };
+            
+            console.log(`[${timestamp}] ${type.toUpperCase()}: ${message}`, data || '');
+            
+            // Add to debug panel
+            const logDiv = document.createElement('div');
+            logDiv.className = `debug-log ${type}`;
+            logDiv.innerHTML = `
+                <span class="debug-timestamp">[${timestamp}]</span> 
+                <strong>${type.toUpperCase()}:</strong> ${message}
+                ${data ? `<div class="debug-data">${typeof data === 'object' ? JSON.stringify(data, null, 2) : data}</div>` : ''}
+            `;
+            
+            debugLogsContainer.insertBefore(logDiv, debugLogsContainer.firstChild);
+            
+            // Show debug panel if there's activity
+            if (type === 'error' || type === 'warning') {
+                showDebugPanel();
+            }
+            
+            // Limit log entries to prevent memory issues
+            const logs = debugLogsContainer.querySelectorAll('.debug-log');
+            if (logs.length > 100) {
+                logs[logs.length - 1].remove();
+            }
+        }
+
+        function debugStep(stepName, success = true, data = null) {
+            const stepDiv = document.createElement('div');
+            stepDiv.className = `debug-step ${success ? '' : 'failed'}`;
+            stepDiv.innerHTML = `
+                <strong>${success ? '✅' : '❌'} ${stepName}</strong>
+                ${data ? `<div class="debug-data">${typeof data === 'object' ? JSON.stringify(data, null, 2) : data}</div>` : ''}
+            `;
+            debugLogsContainer.insertBefore(stepDiv, debugLogsContainer.firstChild);
+        }
+
+        function showDebugPanel() {
+            debugPanel.style.display = 'block';
+        }
+
+        function toggleDebugContent() {
+            const content = document.getElementById('debugContent');
+            const toggle = document.querySelector('.debug-toggle');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                toggle.textContent = 'Hide Details';
+            } else {
+                content.style.display = 'none';
+                toggle.textContent = 'Show Details';
+            }
+        }
+
+        function updateExtractionStats(strategy, success, timeTaken, errors = []) {
+            extractionStats.totalAttempts++;
+            if (success) extractionStats.successfulExtractions++;
+            
+            if (!extractionStats.strategiesUsed[strategy]) {
+                extractionStats.strategiesUsed[strategy] = { attempts: 0, successes: 0 };
+            }
+            extractionStats.strategiesUsed[strategy].attempts++;
+            if (success) extractionStats.strategiesUsed[strategy].successes++;
+            
+            extractionStats.performance[strategy] = timeTaken;
+            if (errors.length > 0) {
+                extractionStats.errors = extractionStats.errors.concat(errors);
+            }
+            
+            displayExtractionStats();
+        }
+
+        function displayExtractionStats() {
+            const statsDiv = document.createElement('div');
+            statsDiv.className = 'extraction-stats';
+            statsDiv.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${extractionStats.totalAttempts}</div>
+                    <div class="stat-label">Total Attempts</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${extractionStats.successfulExtractions}</div>
+                    <div class="stat-label">Successful</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${Math.round((extractionStats.successfulExtractions / extractionStats.totalAttempts) * 100) || 0}%</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${Object.keys(extractionStats.strategiesUsed).length}</div>
+                    <div class="stat-label">Strategies Tried</div>
+                </div>
+            `;
+            
+            // Remove existing stats and add new ones
+            const existingStats = debugLogsContainer.querySelector('.extraction-stats');
+            if (existingStats) existingStats.remove();
+            debugLogsContainer.insertBefore(statsDiv, debugLogsContainer.firstChild);
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', loadRecipes);
+        addRecipeBtn.addEventListener('click', addRecipe);
+        recipeUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addRecipe();
+        });
+
+        // Close modal functionality
+        document.querySelector('.close').addEventListener('click', closeModal);
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // Utility functions
+        function showMessage(message, type = 'error') {
+            messageContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
+            setTimeout(() => {
+                messageContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        function setLoading(isLoading) {
+            addRecipeBtn.disabled = isLoading;
+            addRecipeBtn.innerHTML = isLoading ? 
+                '<div class="spinner"></div> Processing...' : 
+                '<i class="fas fa-plus"></i> Add Recipe';
+        }
+
+        // Domain-specific extraction rules inspired by recipe-scrapers
+        const DOMAIN_RULES = {
+            'therealfooddietitians.com': {
+                title: ['h1', '.recipe-title', '.entry-title'],
+                ingredients: ['[class*="ingredient"]', '.recipe-ingredients li', '.ingredients li', '.recipe-card-ingredients li'],
+                instructions: ['[class*="instruction"]', '.recipe-instructions li', '.instructions li', '.recipe-card-instructions li']
+            },
+            'thereciperebel.com': {
+                title: ['h1.entry-title', 'h1', '.recipe-title'],
+                ingredients: ['.recipe-card-ingredients li', '.wp-block-recipe-card-ingredients li', '.ingredients li', 'li[class*="ingredient"]'],
+                instructions: ['.recipe-card-instructions li', '.wp-block-recipe-card-instructions li', '.instructions li', 'li[class*="instruction"]']
+            },
+            'saltandlavender.com': {
+                title: ['h1', '.recipe-title'],
+                ingredients: ['.recipe-ingredients li', '.ingredients li'],
+                instructions: ['.recipe-instructions li', '.instructions li']
+            },
+            'allrecipes.com': {
+                title: ['h1', '.recipe-summary__h1'],
+                ingredients: ['.recipe-ingred_txt', '.ingredients__item'],
+                instructions: ['.recipe-directions__list--item', '.instructions li']
+            },
+            'foodnetwork.com': {
+                title: ['h1.o-AssetTitle__a-HeadlineText', '.recipe-title'],
+                ingredients: ['.o-RecipeIngredient__a-Ingredient', '.ingredients li'],
+                instructions: ['.o-Method__m-Step', '.instructions li']
+            }
+        };
+
+        // Comprehensive recipe extraction with multiple strategies
+        async function extractRecipeData(url) {
+            const startTime = performance.now();
+            let html;
+            let doc;
+            let errors = [];
+            let strategy = '';
+            
+            try {
+                debugLog(`Starting recipe extraction for: ${url}`, 'info');
+                showDebugPanel();
+                
+                // Try multiple CORS proxies
+                debugStep('Fetching HTML content', true);
+                html = await fetchWithFallback(url);
+                debugLog(`Successfully fetched HTML (${html.length} characters)`, 'success');
+                
+                // Create a DOM parser to parse the HTML
+                const parser = new DOMParser();
+                doc = parser.parseFromString(html, 'text/html');
+                debugLog('HTML parsed successfully', 'success');
+                
+                // Get domain for domain-specific rules
+                const domain = new URL(url).hostname.replace('www.', '');
+                debugLog(`Detected domain: ${domain}`, 'info');
+                
+                // Strategy 1: JSON-LD structured data (most reliable)
+                debugStep('Trying Strategy 1: JSON-LD structured data');
+                try {
+                    const jsonLdResult = extractFromJsonLD(doc);
+                    if (jsonLdResult && jsonLdResult.ingredients.length > 0) {
+                        strategy = 'JSON-LD';
+                        debugStep('Strategy 1: JSON-LD', true, {
+                            ingredients: jsonLdResult.ingredients.length,
+                            instructions: jsonLdResult.instructions.length
+                        });
+                        const result = { ...jsonLdResult, url };
+                        updateExtractionStats(strategy, true, performance.now() - startTime);
+                        return result;
+                    } else {
+                        debugStep('Strategy 1: JSON-LD', false, 'No valid JSON-LD data found');
+                    }
+                } catch (error) {
+                    errors.push(`JSON-LD: ${error.message}`);
+                    debugStep('Strategy 1: JSON-LD', false, error.message);
+                }
+                
+                // Strategy 2: Domain-specific CSS selectors
+                debugStep('Trying Strategy 2: Domain-specific CSS selectors');
+                try {
+                    const domainResult = extractFromDomainRules(doc, domain);
+                    if (domainResult && domainResult.ingredients.length > 0) {
+                        strategy = 'Domain-specific';
+                        debugStep('Strategy 2: Domain-specific', true, {
+                            ingredients: domainResult.ingredients.length,
+                            instructions: domainResult.instructions.length
+                        });
+                        const result = { ...domainResult, url };
+                        updateExtractionStats(strategy, true, performance.now() - startTime, errors);
+                        return result;
+                    } else {
+                        debugStep('Strategy 2: Domain-specific', false, `No rules found for domain: ${domain}`);
+                    }
+                } catch (error) {
+                    errors.push(`Domain-specific: ${error.message}`);
+                    debugStep('Strategy 2: Domain-specific', false, error.message);
+                }
+                
+                // Strategy 3: Enhanced text parsing
+                debugStep('Trying Strategy 3: Enhanced text parsing');
+                try {
+                    const textResult = extractFromEnhancedText(html, doc);
+                    if (textResult && (textResult.ingredients.length > 1 || textResult.instructions.length > 1)) {
+                        strategy = 'Text parsing';
+                        debugStep('Strategy 3: Text parsing', true, {
+                            ingredients: textResult.ingredients.length,
+                            instructions: textResult.instructions.length
+                        });
+                        const result = { ...textResult, url };
+                        updateExtractionStats(strategy, true, performance.now() - startTime, errors);
+                        return result;
+                    } else {
+                        debugStep('Strategy 3: Text parsing', false, `Found ${textResult?.ingredients?.length || 0} ingredients, ${textResult?.instructions?.length || 0} instructions`);
+                    }
+                } catch (error) {
+                    errors.push(`Text parsing: ${error.message}`);
+                    debugStep('Strategy 3: Text parsing', false, error.message);
+                }
+                
+                // Strategy 4: Generic CSS selectors
+                debugStep('Trying Strategy 4: Generic CSS selectors');
+                try {
+                    const genericResult = extractFromGenericSelectors(doc);
+                    strategy = 'Generic CSS';
+                    debugStep('Strategy 4: Generic CSS', true, {
+                        ingredients: genericResult.ingredients.length,
+                        instructions: genericResult.instructions.length
+                    });
+                    const result = { ...genericResult, url };
+                    updateExtractionStats(strategy, genericResult.ingredients.length > 1 || genericResult.instructions.length > 1, performance.now() - startTime, errors);
+                    return result;
+                } catch (error) {
+                    errors.push(`Generic CSS: ${error.message}`);
+                    debugStep('Strategy 4: Generic CSS', false, error.message);
+                }
+                
+            } catch (error) {
+                debugLog(`Critical error in extraction: ${error.message}`, 'error');
+                errors.push(`Critical: ${error.message}`);
+                updateExtractionStats('Failed', false, performance.now() - startTime, errors);
+                throw new Error('Failed to extract recipe data. Please check the URL and try again.');
+            }
+        }
+
+        // Try multiple CORS proxies until one works
+        async function fetchWithFallback(url) {
+            let lastError;
+            
+            for (let i = 0; i < CORS_PROXIES.length; i++) {
+                const proxy = CORS_PROXIES[i];
+                try {
+                    debugLog(`Trying proxy ${i + 1}/${CORS_PROXIES.length}: ${proxy}`, 'info');
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                    
+                    const response = await fetch(proxy + encodeURIComponent(url), {
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (response.ok) {
+                        debugLog(`Proxy ${i + 1} successful (${response.status})`, 'success');
+                        return await response.text();
+                    } else {
+                        debugLog(`Proxy ${i + 1} failed with status: ${response.status}`, 'warning');
+                    }
+                } catch (error) {
+                    debugLog(`Proxy ${i + 1} failed: ${error.message}`, 'warning');
+                    lastError = error;
+                }
+            }
+            
+            throw new Error(`All CORS proxies failed. Last error: ${lastError?.message || 'Unknown error'}`);
+        }
+
+        // Strategy 1: JSON-LD structured data
+        function extractFromJsonLD(doc) {
+            debugLog('Searching for JSON-LD structured data...', 'info');
+            const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
+            debugLog(`Found ${scripts.length} JSON-LD script tags`, 'info');
+            
+            for (let i = 0; i < scripts.length; i++) {
+                try {
+                    debugLog(`Parsing JSON-LD script ${i + 1}/${scripts.length}`, 'info');
+                    const data = JSON.parse(scripts[i].textContent);
+                    debugLog('JSON-LD parsed successfully', 'success', {
+                        type: data['@type'],
+                        isArray: Array.isArray(data)
+                    });
+                    
+                    const recipe = Array.isArray(data) ? 
+                        data.find(item => item['@type'] === 'Recipe') : 
+                        data['@type'] === 'Recipe' ? data : null;
+                    
+                    if (recipe) {
+                        debugLog('Recipe object found in JSON-LD', 'success', {
+                            hasName: !!recipe.name,
+                            hasIngredients: !!recipe.recipeIngredient,
+                            hasInstructions: !!recipe.recipeInstructions,
+                            ingredientCount: recipe.recipeIngredient?.length || 0,
+                            instructionCount: recipe.recipeInstructions?.length || 0
+                        });
+                        
+                        return {
+                            title: cleanText(recipe.name) || 'Untitled Recipe',
+                            description: cleanText(recipe.description) || '',
+                            image: extractImageFromData(recipe.image) || '',
+                            ingredients: extractAndFilterIngredients(recipe.recipeIngredient || []),
+                            instructions: extractAndFilterInstructions(
+                                recipe.recipeInstructions ? recipe.recipeInstructions.map(inst => 
+                                    typeof inst === 'string' ? inst : inst.text || inst.name || ''
+                                ).filter(Boolean) : []
+                            ),
+                            prepTime: recipe.prepTime || '',
+                            cookTime: recipe.cookTime || '',
+                            totalTime: recipe.totalTime || '',
+                            servings: recipe.recipeYield || ''
+                        };
+                    } else {
+                        debugLog(`JSON-LD script ${i + 1} is not a recipe`, 'info');
+                    }
+                } catch (e) {
+                    debugLog(`Failed to parse JSON-LD script ${i + 1}: ${e.message}`, 'warning');
+                }
+            }
+            return null;
+        }
+
+        // Strategy 2: Domain-specific CSS selectors
+        function extractFromDomainRules(doc, domain) {
+            const rules = DOMAIN_RULES[domain];
+            if (!rules) {
+                debugLog(`No domain-specific rules found for: ${domain}`, 'info');
+                return null;
+            }
+
+            debugLog(`Using domain-specific rules for: ${domain}`, 'info', rules);
+
+            const title = extractBySelectors(doc, rules.title, 'textContent');
+            const ingredients = extractListBySelectors(doc, rules.ingredients);
+            const instructions = extractListBySelectors(doc, rules.instructions);
+
+            debugLog('Domain-specific extraction results', 'info', {
+                title: !!title,
+                ingredientCount: ingredients.length,
+                instructionCount: instructions.length
+            });
+
+            if (ingredients.length > 0 || instructions.length > 0) {
+                return {
+                    title: cleanText(title) || extractGenericTitle(doc),
+                    description: extractMetaDescription(doc),
+                    image: extractGenericImage(doc),
+                    ingredients: extractAndFilterIngredients(ingredients),
+                    instructions: extractAndFilterInstructions(instructions)
+                };
+            }
+            return null;
+        }
+
+        // Strategy 3: Enhanced text parsing
+        function extractFromEnhancedText(html, doc) {
+            debugLog('Starting enhanced text parsing...', 'info');
+            
+            // Clean HTML for text parsing
+            const cleanHtml = html
+                .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+                .replace(/<nav\b[^<]*(?:(?!<\/nav>)<[^<]*)*<\/nav>/gi, '')
+                .replace(/<header\b[^<]*(?:(?!<\/header>)<[^<]*)*<\/header>/gi, '')
+                .replace(/<footer\b[^<]*(?:(?!<\/footer>)<[^<]*)*<\/footer>/gi, '')
+                .replace(/<aside\b[^<]*(?:(?!<\/aside>)<[^<]*)*<\/aside>/gi, '');
+
+            debugLog(`Cleaned HTML (${cleanHtml.length} characters)`, 'info');
+
+            // Convert to plain text but preserve some structure
+            const textContent = cleanHtml
+                .replace(/<\/?(h[1-6]|p|div|li|ul|ol)[^>]*>/gi, '\n')
+                .replace(/<[^>]*>/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            debugLog(`Extracted text content (${textContent.length} characters)`, 'info');
+
+            // Improved ingredients regex - more specific and limited in scope
+            const ingredientsMatch = textContent.match(
+                /(?:^|\n)\s*(?:ingredients?|what you[''′]?ll need|shopping list|recipe ingredients)[:\s]*\n?((?:(?!\n\s*(?:instructions?|directions?|method|preparation|steps|how to make|notes|nutrition)).{1,150}\n?){1,25})/im
+            );
+
+            // Improved instructions regex - more specific and limited in scope  
+            const instructionsMatch = textContent.match(
+                /(?:^|\n)\s*(?:instructions?|directions?|method|preparation|steps|how to make)[:\s]*\n?((?:(?!\n\s*(?:notes|tips|nutrition|storage|serving|dietary|health benefits|conclusion|related)).{20,300}\n?){1,20})/im
+            );
+
+            debugLog('Text parsing pattern matches', 'info', {
+                foundIngredients: !!ingredientsMatch,
+                foundInstructions: !!instructionsMatch,
+                ingredientsLength: ingredientsMatch?.[1]?.length || 0,
+                instructionsLength: instructionsMatch?.[1]?.length || 0,
+                ingredientsPreview: ingredientsMatch?.[1]?.substring(0, 100) + '...' || 'None',
+                instructionsPreview: instructionsMatch?.[1]?.substring(0, 100) + '...' || 'None'
+            });
+
+            if (ingredientsMatch || instructionsMatch) {
+                const ingredients = ingredientsMatch ? parseTextIngredients(ingredientsMatch[1]) : [];
+                const instructions = instructionsMatch ? parseTextInstructions(instructionsMatch[1]) : [];
+
+                debugLog('Text parsing results', 'info', {
+                    ingredientCount: ingredients.length,
+                    instructionCount: instructions.length
+                });
+
+                if (ingredients.length > 0 || instructions.length > 0) {
+                    return {
+                        title: extractGenericTitle(doc),
+                        description: extractMetaDescription(doc),
+                        image: extractGenericImage(doc),
+                        ingredients: extractAndFilterIngredients(ingredients),
+                        instructions: extractAndFilterInstructions(instructions)
+                    };
+                }
+            }
+            return null;
+        }
+
+        // Parse ingredients from text
+        function parseTextIngredients(text) {
+            debugLog('Parsing ingredients from text...', 'info');
+            
+            // Split on newlines and clean up
+            const lines = text.split(/\n+/)
+                .map(line => cleanText(line))
+                .filter(line => line.length > 2);
+
+            debugLog(`Found ${lines.length} potential ingredient lines`, 'info', {
+                firstFew: lines.slice(0, 5)
+            });
+
+            const ingredients = [];
+            for (const line of lines) {
+                // Skip obvious non-ingredients
+                if (line.match(/^(ingredients?|instructions?|directions?|notes?|tips?|method|equipment|nutrition|recipe|print|save|prep time|cook time|total time|servings|calories)$/i)) continue;
+                if (line.length > 200) continue; // Skip long paragraphs
+                if (line.length < 5) continue; // Skip very short lines
+                
+                // Look for ingredient patterns (more permissive)
+                const hasNumber = line.match(/^\d+|[\d\/\-\.]+/); // Starts with number or contains fractions
+                const hasMeasurement = line.match(/\b(?:cup|tablespoon|teaspoon|pound|ounce|gram|liter|tsp|tbsp|lb|oz|kg|g|ml|l|clove|slice|dash|pinch|can|jar|package|pkg|head|bunch|medium|large|small)\b/i);
+                const hasFoodWords = line.match(/\b(?:oil|salt|pepper|onion|garlic|butter|cheese|flour|sugar|egg|milk|water|sauce|spice|herb|chicken|beef|pork|fish|tomato|potato|carrot|celery|rice|pasta|bread|cream|wine|broth|stock|lemon|lime|apple|banana|spinach|lettuce|mushroom|bell|chili|paprika|oregano|basil|thyme|rosemary|cilantro|parsley|ginger|vinegar|honey|olive|vegetable|canola|coconut|vanilla|chocolate|nuts|almonds|cashews|walnuts|pecans)\b/i);
+                
+                if (hasNumber || hasMeasurement || hasFoodWords) {
+                    ingredients.push(line);
+                }
+            }
+            
+            debugLog(`Extracted ${ingredients.length} ingredients from text`, 'info', {
+                ingredients: ingredients.slice(0, 5)
+            });
+            return ingredients;
+        }
+
+        // Parse instructions from text  
+        function parseTextInstructions(text) {
+            debugLog('Parsing instructions from text...', 'info');
+            
+            // Split on newlines and clean up
+            const lines = text.split(/\n+/)
+                .map(line => cleanText(line))
+                .filter(line => line.length > 15);
+
+            debugLog(`Found ${lines.length} potential instruction lines`, 'info', {
+                firstFew: lines.slice(0, 3)
+            });
+
+            const instructions = [];
+            for (const line of lines) {
+                // Skip headers
+                if (line.match(/^(ingredients?|instructions?|directions?|notes?|tips?|method|equipment|nutrition|recipe|print|save|prep time|cook time|total time|servings|calories)$/i)) continue;
+                
+                // Look for instruction patterns (more permissive)
+                const hasCookingWords = line.match(/\b(?:add|mix|stir|cook|bake|heat|boil|preheat|combine|place|pour|serve|garnish|season|sear|brown|saute|simmer|cover|remove|chop|dice|slice|mince|cut|blend|whisk|beat|fold|toss|sprinkle|drizzle|marinate|roast|broil|grill|fry|steam|reduce|thicken|melt|soften|tender|golden|crispy|bubbling|until|degrees|minutes|hours|oven|skillet|pan|pot|bowl|dish)\b/i);
+                const hasSequentialWords = line.match(/\b(?:first|then|next|finally|meanwhile|while|after|before|once|when|until|step|continue|repeat)\b/i);
+                const isReasonableLength = line.length >= 20 && line.length <= 500;
+                
+                if ((hasCookingWords || hasSequentialWords) && isReasonableLength) {
+                    instructions.push(line);
+                }
+            }
+            
+            debugLog(`Extracted ${instructions.length} instructions from text`, 'info', {
+                instructions: instructions.slice(0, 3)
+            });
+            return instructions;
+        }
+
+        // Strategy 4: Generic CSS selectors
+        function extractFromGenericSelectors(doc) {
+            debugLog('Using generic CSS selectors...', 'info');
+            
+            const ingredientSelectors = [
+                '.recipe-card-ingredients li', '.wp-block-recipe-card-ingredients li',
+                '.recipe-ingredients li', '.ingredients li', 'li[class*="ingredient"]',
+                '.recipe-ingredient', '.ingredient', '[class*="ingredient"]',
+                '.entry-content ul li', '.post-content ul li', // More generic selectors
+                'ul li', // Very generic fallback
+            ];
+            
+            const instructionSelectors = [
+                '.recipe-card-instructions li', '.wp-block-recipe-card-instructions li',
+                '.recipe-instructions li', '.instructions li', 'li[class*="instruction"]',
+                '.recipe-instruction', '.instruction', '[class*="instruction"]',
+                '.method-step', '.recipe-step', '.directions li',
+                '.entry-content ol li', '.post-content ol li', // More generic selectors
+                'ol li', // Very generic fallback
+            ];
+
+            const ingredients = extractListBySelectors(doc, ingredientSelectors);
+            const instructions = extractListBySelectors(doc, instructionSelectors);
+
+            debugLog('Generic selector results', 'info', {
+                ingredientCount: ingredients.length,
+                instructionCount: instructions.length,
+                sampleIngredients: ingredients.slice(0, 3),
+                sampleInstructions: instructions.slice(0, 2)
+            });
+
+            return {
+                title: extractGenericTitle(doc),
+                description: extractMetaDescription(doc),
+                image: extractGenericImage(doc),
+                ingredients: extractAndFilterIngredients(ingredients),
+                instructions: extractAndFilterInstructions(instructions)
+            };
+        }
+
+        // Helper functions
+        function extractBySelectors(doc, selectors, property = 'textContent') {
+            for (const selector of selectors) {
+                const element = doc.querySelector(selector);
+                if (element) {
+                    debugLog(`Found element with selector: ${selector}`, 'success');
+                    return property === 'textContent' ? element.textContent : element[property];
+                }
+            }
+            debugLog(`No elements found for selectors: ${selectors.join(', ')}`, 'warning');
+            return '';
+        }
+
+        function extractListBySelectors(doc, selectors) {
+            for (const selector of selectors) {
+                const elements = doc.querySelectorAll(selector);
+                if (elements.length > 0) {
+                    debugLog(`Found ${elements.length} elements with selector: ${selector}`, 'success');
+                    const results = Array.from(elements).map(el => el.textContent.trim()).filter(Boolean);
+                    
+                    // Check if we got large blocks that need to be split
+                    const splitResults = [];
+                    for (const result of results) {
+                        if (result.length > 300 && result.includes('\n')) {
+                            // This looks like a combined block - try to split it
+                            debugLog(`Splitting combined content block (${result.length} chars)`, 'info');
+                            const splitItems = splitCombinedContent(result, selector.includes('ingredient'));
+                            splitResults.push(...splitItems);
+                        } else {
+                            splitResults.push(result);
+                        }
+                    }
+                    
+                    debugLog(`After splitting: ${splitResults.length} items`, 'info', {
+                        firstFew: splitResults.slice(0, 3)
+                    });
+                    
+                    return splitResults;
+                }
+            }
+            debugLog(`No list elements found for selectors: ${selectors.join(', ')}`, 'warning');
+            return [];
+        }
+
+        function splitCombinedContent(text, isIngredient) {
+            // Remove header text and clean up
+            const cleaned = text
+                .replace(/^(ingredients?|instructions?|directions?|method|cook mode|prevent your screen from going dark)/i, '')
+                .replace(/last step!.*$/i, '') // Remove footer text
+                .trim();
+            
+            // Split on newlines and filter
+            const lines = cleaned.split(/\n+/)
+                .map(line => line.trim())
+                .filter(line => {
+                    if (!line || line.length < 3) return false;
+                    if (line.match(/^(ingredients?|instructions?|directions?|method|cook mode|prevent your screen|last step|please leave a review)/i)) return false;
+                    return true;
+                });
+            
+            if (isIngredient) {
+                // For ingredients, look for lines that seem like individual ingredients
+                return lines.filter(line => {
+                    return line.length >= 5 && line.length <= 150 && 
+                           (line.match(/\d/) || line.match(/\b(?:cup|tsp|tbsp|pound|lb|oz|clove|slice|dash|pinch|can|jar|package)\b/i));
+                });
+            } else {
+                // For instructions, look for lines that seem like individual steps
+                return lines.filter(line => {
+                    return line.length >= 20 && line.length <= 400;
+                });
+            }
+        }
+
+        function extractGenericTitle(doc) {
+            const title = cleanText(
+                doc.querySelector('h1')?.textContent || 
+                doc.querySelector('.recipe-title')?.textContent || 
+                doc.querySelector('[class*="title"]')?.textContent ||
+                doc.querySelector('title')?.textContent ||
+                'Untitled Recipe'
+            );
+            debugLog(`Extracted title: ${title}`, 'info');
+            return title;
+        }
+
+        function extractMetaDescription(doc) {
+            const description = doc.querySelector('meta[name="description"]')?.content || '';
+            debugLog(`Extracted description: ${description ? 'Found' : 'Not found'}`, 'info');
+            return description;
+        }
+
+        function extractGenericImage(doc) {
+            const image = doc.querySelector('meta[property="og:image"]')?.content || 
+                   doc.querySelector('.recipe-image img')?.src || 
+                   doc.querySelector('img[class*="recipe"]')?.src || '';
+            debugLog(`Extracted image: ${image ? 'Found' : 'Not found'}`, 'info');
+            return image;
+        }
+
+        function extractImageFromData(image) {
+            if (!image) return '';
+            if (typeof image === 'string') return image;
+            if (Array.isArray(image)) return image[0] || '';
+            return image.url || image['@id'] || '';
+        }
+
+        function cleanText(text) {
+            if (!text) return '';
+            return text
+                .replace(/▢/g, '') // Remove checkbox characters
+                .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+                .replace(/^\d+\.\s*/, '') // Remove leading numbers like "1. "
+                .trim();
+        }
+
+        // Essential filtering functions
+        function extractAndFilterIngredients(ingredients) {
+            debugLog(`Filtering ${ingredients.length} raw ingredients...`, 'info');
+            const seen = new Set();
+            const filtered = [];
+            let skipped = 0;
+            const skippedReasons = {};
+            
+            for (const ingredient of ingredients) {
+                const cleaned = cleanText(ingredient);
+                
+                // Skip if empty or too short
+                if (!cleaned || cleaned.length < 3) {
+                    skipped++;
+                    skippedReasons['too short'] = (skippedReasons['too short'] || 0) + 1;
+                    continue;
+                }
+                
+                // Skip obvious headers, navigation text, or multipliers
+                if (cleaned.toLowerCase().match(/^(ingredients?|step photos|full ingredients|skip to|order|cookbook|salt.*lavender|0\.5x|1x|2x|3x|print|save|recipe|nutrition|notes|instructions|directions|method|prep time|cook time|total time|servings|calories|cook mode|prevent your screen)$/i)) {
+                    skipped++;
+                    skippedReasons['header/navigation'] = (skippedReasons['header/navigation'] || 0) + 1;
+                    continue;
+                }
+                if (cleaned.match(/skip to|cookbook|order|salt.*lavender|step photos|full ingredients|amp|0\.5x1x2x3x|print recipe|save recipe|cook mode|prevent your screen/i)) {
+                    skipped++;
+                    skippedReasons['website text'] = (skippedReasons['website text'] || 0) + 1;
+                    continue;
+                }
+                
+                // More lenient length check - allow longer ingredients that were split from blocks
+                if (cleaned.length > 400) {
+                    skipped++;
+                    skippedReasons['too long'] = (skippedReasons['too long'] || 0) + 1;
+                    continue;
+                }
+                
+                // More permissive validation - check for ANY food-related content
+                const hasNumber = cleaned.match(/\d/);
+                const hasMeasurement = cleaned.match(/\b(?:cup|tablespoon|teaspoon|pound|ounce|gram|liter|tsp|tbsp|lb|oz|kg|g|ml|l|clove|slice|dash|pinch|can|jar|package|pkg|head|bunch|medium|large|small|whole|half|quarter)\b/i);
+                const hasFoodWords = cleaned.match(/\b(?:oil|salt|pepper|onion|garlic|butter|cheese|flour|sugar|egg|milk|water|sauce|spice|herb|chicken|beef|pork|fish|tomato|potato|carrot|celery|rice|pasta|bread|cream|wine|broth|stock|lemon|lime|apple|banana|spinach|lettuce|mushroom|bell|chili|paprika|oregano|basil|thyme|rosemary|cilantro|parsley|ginger|vinegar|honey|olive|vegetable|canola|coconut|vanilla|chocolate|nuts|almonds|cashews|walnuts|pecans|beans|corn|quinoa|barley|oats|avocado|bone-in|boneless|chops)\b/i);
+                const seemsLikeIngredient = cleaned.length >= 5 && cleaned.length <= 200;
+                
+                // Accept if it has any food indicators OR seems reasonable
+                if (!hasNumber && !hasMeasurement && !hasFoodWords && !seemsLikeIngredient) {
+                    skipped++;
+                    skippedReasons['no food pattern'] = (skippedReasons['no food pattern'] || 0) + 1;
+                    continue;
+                }
+                
+                // Skip if it's just a fragment of another ingredient we already have
+                const isFragment = filtered.some(existing => 
+                    existing.toLowerCase().includes(cleaned.toLowerCase()) && 
+                    existing.length > cleaned.length + 10
+                );
+                if (isFragment) {
+                    skipped++;
+                    skippedReasons['duplicate fragment'] = (skippedReasons['duplicate fragment'] || 0) + 1;
+                    continue;
+                }
+                
+                // Deduplicate
+                const normalized = cleaned.toLowerCase().replace(/[^\w\s]/g, '');
+                if (seen.has(normalized)) {
+                    skipped++;
+                    skippedReasons['duplicate'] = (skippedReasons['duplicate'] || 0) + 1;
+                    continue;
+                }
+                seen.add(normalized);
+                
+                filtered.push(cleaned);
+                
+                // Limit to reasonable number
+                if (filtered.length >= 20) break;
+            }
+            
+            debugLog(`Ingredient filtering complete: ${filtered.length} kept, ${skipped} skipped`, 'info', {
+                skippedReasons,
+                keptIngredients: filtered.slice(0, 5)
+            });
+            
+            return filtered.length > 0 ? filtered : ['No ingredients found'];
+        }
+
+        function extractAndFilterInstructions(instructions) {
+            debugLog(`Filtering ${instructions.length} raw instructions...`, 'info');
+            const seen = new Set();
+            const filtered = [];
+            let skipped = 0;
+            const skippedReasons = {};
+            
+            for (const instruction of instructions) {
+                const cleaned = cleanText(instruction);
+                
+                // Skip if empty or too short for an instruction
+                if (!cleaned || cleaned.length < 10) {
+                    skipped++;
+                    skippedReasons['too short'] = (skippedReasons['too short'] || 0) + 1;
+                    continue;
+                }
+                
+                // Skip obvious headers
+                if (cleaned.toLowerCase().match(/^(ingredients?|instructions?|directions?|notes?|tips?|method|equipment|nutrition|recipe|print|save|prep time|cook time|total time|servings|calories|cook mode|prevent your screen)$/i)) {
+                    skipped++;
+                    skippedReasons['header'] = (skippedReasons['header'] || 0) + 1;
+                    continue;
+                }
+                
+                // Skip if it contains navigation/website text
+                if (cleaned.match(/skip to|cookbook|order|salt.*lavender|step photos|full ingredients|amp|print recipe|save recipe|cook mode|prevent your screen|please leave a review|this helps our business/i)) {
+                    skipped++;
+                    skippedReasons['website text'] = (skippedReasons['website text'] || 0) + 1;
+                    continue;
+                }
+                
+                // More permissive - check for cooking words OR reasonable length
+                const hasCookingWords = cleaned.match(/\b(?:add|mix|stir|cook|bake|heat|boil|preheat|combine|place|pour|serve|garnish|season|oven|skillet|pan|dish|minutes|degrees|temperature|sear|brown|saute|simmer|cover|remove|chop|dice|slice|mince|cut|blend|whisk|beat|fold|toss|sprinkle|drizzle|marinate|roast|broil|grill|fry|steam|reduce|thicken|melt|soften|tender|golden|crispy|bubbling|until|first|then|next|finally|meanwhile|while|after|before|once|when|step|continue|repeat|deglaze|register|thermometer|browned|stirring)\b/i);
+                const isReasonableLength = cleaned.length >= 15 && cleaned.length <= 800;
+                const hasNumbers = cleaned.match(/\d+/);
+                
+                // Accept if it seems like an instruction
+                if (!hasCookingWords && (!isReasonableLength || !hasNumbers)) {
+                    skipped++;
+                    skippedReasons['no cooking pattern'] = (skippedReasons['no cooking pattern'] || 0) + 1;
+                    continue;
+                }
+                
+                // Deduplicate
+                const normalized = cleaned.toLowerCase().replace(/[^\w\s]/g, '');
+                if (seen.has(normalized)) {
+                    skipped++;
+                    skippedReasons['duplicate'] = (skippedReasons['duplicate'] || 0) + 1;
+                    continue;
+                }
+                seen.add(normalized);
+                
+                filtered.push(cleaned);
+                
+                // Limit to reasonable number
+                if (filtered.length >= 15) break;
+            }
+            
+            debugLog(`Instruction filtering complete: ${filtered.length} kept, ${skipped} skipped`, 'info', {
+                skippedReasons,
+                keptInstructions: filtered.slice(0, 3)
+            });
+            
+            return filtered.length > 0 ? filtered : ['No instructions found'];
+        }
+
+        // Add recipe function
+        async function addRecipe() {
+            const url = recipeUrlInput.value.trim();
+            
+            if (!url) {
+                showMessage('Please enter a recipe URL');
+                return;
+            }
+            
+            if (!isValidUrl(url)) {
+                showMessage('Please enter a valid URL');
+                return;
+            }
+            
+            setLoading(true);
+            debugLog('=== STARTING NEW RECIPE EXTRACTION ===', 'info');
+            
+            try {
+                // Check if recipe already exists
+                const existingRecipe = recipes.find(recipe => recipe.url === url);
+                if (existingRecipe) {
+                    const shouldOverwrite = confirm('This recipe already exists. Do you want to overwrite it?');
+                    if (!shouldOverwrite) {
+                        setLoading(false);
+                        return;
+                    }
+                }
+                
+                // Extract recipe data
+                const recipeData = await extractRecipeData(url);
+                
+                // Add timestamp
+                recipeData.dateAdded = new Date().toISOString();
+                recipeData.id = Date.now().toString();
+                
+                debugLog('Recipe extraction completed successfully', 'success', {
+                    title: recipeData.title,
+                    ingredients: recipeData.ingredients.length,
+                    instructions: recipeData.instructions.length
+                });
+                
+                // Save to Google Sheets (implement your Google Sheets integration here)
+                await saveRecipeToSheet(recipeData);
+                
+                // Update local recipes array
+                if (existingRecipe) {
+                    const index = recipes.findIndex(recipe => recipe.url === url);
+                    recipes[index] = recipeData;
+                } else {
+                    recipes.push(recipeData);
+                }
+                
+                // Clear input and refresh display
+                recipeUrlInput.value = '';
+                renderRecipes();
+                showMessage('Recipe added successfully!', 'success');
+                
+            } catch (error) {
+                debugLog(`Recipe extraction failed: ${error.message}`, 'error');
+                showMessage(error.message);
+            } finally {
+                setLoading(false);
+                debugLog('=== RECIPE EXTRACTION COMPLETED ===', 'info');
+            }
+        }
+
+        // Google Sheets integration
+        async function saveRecipeToSheet(recipeData) {
+            if (USE_LOCAL_STORAGE) {
+                // Local storage fallback for testing
+                const existingRecipes = JSON.parse(localStorage.getItem('recipes') || '[]');
+                const index = existingRecipes.findIndex(recipe => recipe.url === recipeData.url);
+                
+                if (index !== -1) {
+                    existingRecipes[index] = recipeData;
+                } else {
+                    existingRecipes.push(recipeData);
+                }
+                
+                localStorage.setItem('recipes', JSON.stringify(existingRecipes));
+                debugLog('Recipe saved to localStorage', 'success');
+                return;
+            }
+
+            // Google Sheets integration
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'add',
+                    recipe: recipeData
+                })
+            });
+
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to save recipe to Google Sheets');
+            }
+        }
+
+        async function loadRecipesFromSheet() {
+            if (USE_LOCAL_STORAGE) {
+                // Local storage fallback for testing
+                return JSON.parse(localStorage.getItem('recipes') || '[]');
+            }
+
+            // Google Sheets integration
+            const response = await fetch(GOOGLE_SCRIPT_URL + '?action=get');
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to load recipes from Google Sheets');
+            }
+            
+            return result.data || [];
+        }
+
+        async function deleteRecipeFromSheet(recipeId) {
+            if (USE_LOCAL_STORAGE) {
+                // Local storage fallback for testing
+                const existingRecipes = JSON.parse(localStorage.getItem('recipes') || '[]');
+                const filteredRecipes = existingRecipes.filter(recipe => recipe.id !== recipeId);
+                localStorage.setItem('recipes', JSON.stringify(filteredRecipes));
+                return;
+            }
+
+            // Google Sheets integration
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'delete',
+                    recipeId: recipeId
+                })
+            });
+
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to delete recipe from Google Sheets');
+            }
+        }
+
+        // Load recipes
+        async function loadRecipes() {
+            loadingRecipes.style.display = 'flex';
+            try {
+                recipes = await loadRecipesFromSheet();
+                renderRecipes();
+            } catch (error) {
+                showMessage('Failed to load recipes');
+            } finally {
+                loadingRecipes.style.display = 'none';
+            }
+        }
+
+        // Render recipes
+        function renderRecipes() {
+            if (recipes.length === 0) {
+                recipeGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-utensils"></i>
+                        <h3>No recipes yet</h3>
+                        <p>Add your first recipe by pasting a URL above</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            recipeGrid.innerHTML = recipes.map(recipe => `
+                <div class="recipe-card" onclick="openRecipeModal('${recipe.id}')">
+                    <img src="${recipe.image || 'https://via.placeholder.com/300x200?text=No+Image'}" 
+                         alt="${recipe.title}" 
+                         onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+                    <div class="recipe-card-content">
+                        <h3 class="recipe-title">${recipe.title}</h3>
+                        <div class="recipe-meta">
+                            <span><i class="fas fa-clock"></i> ${recipe.totalTime || 'N/A'}</span>
+                            <span><i class="fas fa-users"></i> ${recipe.servings || 'N/A'}</span>
+                        </div>
+                        <p class="recipe-description">${recipe.description}</p>
+                        <div class="recipe-actions">
+                            <button class="view-btn" onclick="event.stopPropagation(); openRecipeModal('${recipe.id}')">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="delete-btn" onclick="event.stopPropagation(); deleteRecipe('${recipe.id}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Delete recipe
+        async function deleteRecipe(recipeId) {
+            if (!confirm('Are you sure you want to delete this recipe?')) return;
+            
+            try {
+                await deleteRecipeFromSheet(recipeId);
+                recipes = recipes.filter(recipe => recipe.id !== recipeId);
+                renderRecipes();
+                showMessage('Recipe deleted successfully!', 'success');
+            } catch (error) {
+                showMessage('Failed to delete recipe');
+            }
+        }
+
+        // Open recipe modal
+        function openRecipeModal(recipeId) {
+            const recipe = recipes.find(r => r.id === recipeId);
+            if (!recipe) return;
+            
+            modalTitle.textContent = recipe.title;
+            modalBody.innerHTML = `
+                <div class="recipe-info">
+                    <div class="ingredients-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-list"></i> Ingredients
+                        </h3>
+                        <ul class="ingredients-list">
+                            ${recipe.ingredients.map(ingredient => `<li>${ingredient}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="instructions-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-clipboard-list"></i> Instructions
+                        </h3>
+                        <ol class="instructions-list">
+                            ${recipe.instructions.map(instruction => `<li>${instruction}</li>`).join('')}
+                        </ol>
+                    </div>
+                </div>
+                ${recipe.image ? `<img src="${recipe.image}" style="width: 100%; max-width: 400px; border-radius: 10px; margin: 20px auto; display: block;" alt="${recipe.title}">` : ''}
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="${recipe.url}" target="_blank" class="btn" style="display: inline-block;">
+                        <i class="fas fa-external-link-alt"></i> View Original Recipe
+                    </a>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        // Close modal
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        // Utility function to validate URL
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        // Navigation functions (from original site)
+        function openmenu() {
+            document.getElementById("sidemenu").style.right = "0";
+        }
+        
+        function closemenu() {
+            document.getElementById("sidemenu").style.right = "-200px";
+        }
+    </script>
+</body>
+</html>
