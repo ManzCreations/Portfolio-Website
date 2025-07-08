@@ -1679,6 +1679,24 @@
                 width: 60px;
             }
         }
+
+        .mobile-notice {
+            background: #ff9800;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .create-recipe-btn {
+            background: #4CAF50 !important;
+        }
+
+        .create-recipe-btn:hover {
+            background: #45a049 !important;
+        }
     </style>
 </head>
 <body>
@@ -1925,11 +1943,11 @@
         // CORS proxies for recipe extraction
         const CORS_PROXIES = [
             'https://api.allorigins.win/raw?url=',
-            'https://corsproxy.io/?',
-            'https://cors-anywhere.herokuapp.com/',
             'https://api.codetabs.com/v1/proxy?quest=',
             'https://thingproxy.freeboard.io/fetch/',
-            'https://cors.isomorphic-git.org/'
+            'https://cors.isomorphic-git.org/',
+            'https://corsproxy.io/?',
+            'https://cors-anywhere.herokuapp.com/'
         ];
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxUULLe9sRmSRG7wvewTPgwKYBXd9yxhqQKKzT_XgeF2IPyJKPQ_HWEJduwu1bW81E8mw/exec';
         
@@ -2176,15 +2194,29 @@
                 
             } catch (error) {
                 debugLog(`Recipe extraction failed: ${error.message}`, 'error');
-    
-                const networkInfo = detectMobileNetwork();
-                let errorMessage = error.message;
                 
-                if (networkInfo.isMobile && error.message.includes('CORS proxies failed')) {
-                    errorMessage = `Mobile network restrictions are blocking recipe extraction. Try:\n• Switching to WiFi\n• Using a desktop computer\n• Manually copying the recipe content`;
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                if (isMobile && error.message.includes('Mobile network is blocking')) {
+                    showMessage('Mobile network blocking detected. Try WiFi or use Create Recipe.', 'warning');
+                    
+                    // Show the create recipe button as fallback
+                    const createBtn = document.getElementById('createRecipeBtn');
+                    if (createBtn) {
+                        createBtn.style.display = 'inline-block';
+                        createBtn.onclick = () => {
+                            // You'll need to implement openCreateModal() if you haven't already
+                            alert('Manual recipe creation coming soon! For now, try WiFi or desktop.');
+                        };
+                        
+                        // Hide it after 15 seconds
+                        setTimeout(() => {
+                            createBtn.style.display = 'none';
+                        }, 15000);
+                    }
+                } else {
+                    showMessage(error.message);
                 }
-                
-                showMessage(errorMessage);
             } finally {
                 setLoading(false);
                 debugLog('=== RECIPE EXTRACTION COMPLETED ===', 'info');
@@ -3302,25 +3334,49 @@
                 errors.push(`Critical: ${error.message}`);
                 updateExtractionStats('Failed', false, performance.now() - startTime, errors);
                 
-                // Return a basic structure instead of throwing
-                return {
-                    title: 'Recipe Extraction Failed',
-                    description: 'Could not extract recipe data',
-                    image: '',
-                    ingredients: ['Extraction failed - please check the original recipe'],
-                    instructions: ['Extraction failed - please check the original recipe'],
-                    prepTime: '',
-                    cookTime: '',
-                    totalTime: '',
-                    servings: '',
-                    url: url
-                };
+                // Check if this is a mobile network issue
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                if (isMobile && error.message.includes('Mobile network is blocking')) {
+                    // Return a helpful error recipe for mobile users
+                    return {
+                        title: '🚫 Mobile Network Blocking Recipe Extraction',
+                        description: 'Your mobile network or carrier is blocking access to recipe extraction services.',
+                        image: '',
+                        ingredients: [
+                            '📱 Mobile networks often block proxy services',
+                            '📶 Try switching to WiFi for better results',
+                            '💻 Desktop computers typically work better',
+                            '✏️ Use "Create Recipe" button to enter manually'
+                        ],
+                        instructions: [
+                            'Switch to a WiFi network and try again',
+                            'Use a desktop computer if available', 
+                            'Click "Create Recipe" to enter the recipe manually',
+                            'Copy ingredients and instructions from the original site',
+                            'Visit the original recipe at: ' + url
+                        ],
+                        prepTime: '',
+                        cookTime: '',
+                        totalTime: '',
+                        servings: '',
+                        url: url,
+                        error: true,
+                        errorMessage: error.message
+                    };
+                }
+                
+                // Regular error handling for non-mobile issues
+                throw new Error('Failed to extract recipe data. Please check the URL and try again.');
             }
         }
 
         // Try multiple CORS proxies until one works
         async function fetchWithFallback(url) {
             let lastError;
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            debugLog(`Device type: ${isMobile ? 'Mobile' : 'Desktop'}`, 'info');
             
             for (let i = 0; i < CORS_PROXIES.length; i++) {
                 const proxy = CORS_PROXIES[i];
@@ -3329,20 +3385,31 @@
                     
                     const controller = new AbortController();
                     // Longer timeout for mobile networks
-                    const timeoutId = setTimeout(() => controller.abort(), 20000);
+                    const timeoutId = setTimeout(() => controller.abort(), isMobile ? 25000 : 15000);
                     
                     const proxyUrl = proxy + encodeURIComponent(url);
-                    debugLog(`Full proxy URL: ${proxyUrl}`, 'info');
+                    
+                    // Mobile-specific headers
+                    const headers = {
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Accept-Language': 'en-US,en;q=0.5',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    };
+                    
+                    // Use desktop user agent on mobile to avoid blocking
+                    if (isMobile) {
+                        headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
+                    }
+                    
+                    debugLog(`Fetching: ${proxyUrl.substring(0, 100)}...`, 'info');
                     
                     const response = await fetch(proxyUrl, {
                         signal: controller.signal,
-                        headers: {
-                            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15',
-                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                            'Accept-Language': 'en-US,en;q=0.5',
-                            'Accept-Encoding': 'gzip, deflate',
-                            'Cache-Control': 'no-cache'
-                        }
+                        headers: headers,
+                        method: 'GET',
+                        mode: 'cors',
+                        credentials: 'omit'
                     });
                     
                     clearTimeout(timeoutId);
@@ -3351,36 +3418,36 @@
                     
                     if (response.ok) {
                         const html = await response.text();
-                        debugLog(`Proxy ${i + 1} successful (${response.status})`, 'success');
+                        debugLog(`Proxy ${i + 1} successful (${response.status}) - ${html.length} chars`, 'success');
                         
-                        // Debug the response
-                        const isValidResponse = debugProxyResponse(html, url);
-                        
-                        if (isValidResponse) {
-                            return html;
-                        } else {
-                            debugLog(`Proxy ${i + 1} returned blocked/empty content`, 'warning');
-                            lastError = new Error('Blocked or empty response');
-                            continue;
+                        // Validate response
+                        if (html.length < 1000) {
+                            debugLog(`Proxy ${i + 1} returned suspiciously short content`, 'warning');
+                            throw new Error('Response too short - likely blocked');
                         }
+                        
+                        return html;
                     } else {
                         debugLog(`Proxy ${i + 1} failed with status: ${response.status}`, 'warning');
                         lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
                 } catch (error) {
-                    clearTimeout(timeoutId);
                     debugLog(`Proxy ${i + 1} failed: ${error.message}`, 'warning');
                     lastError = error;
                     
-                    // Add small delay between attempts on mobile
-                    if (i < CORS_PROXIES.length - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    // Add delay between attempts on mobile to avoid rate limiting
+                    if (isMobile && i < CORS_PROXIES.length - 1) {
+                        debugLog(`Waiting 2 seconds before next attempt...`, 'info');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
                     }
                 }
             }
             
-            // Throw the actual error instead of just logging it
-            const errorMessage = `All CORS proxies failed. Last error: ${lastError?.message || 'Unknown error'}`;
+            // All proxies failed
+            const errorMessage = isMobile ? 
+                'Mobile network is blocking recipe extraction. Try switching to WiFi or use manual entry.' :
+                `All CORS proxies failed. Last error: ${lastError?.message || 'Unknown error'}`;
+            
             debugLog(errorMessage, 'error');
             throw new Error(errorMessage);
         }
