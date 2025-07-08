@@ -1943,9 +1943,6 @@
         // CORS proxies for recipe extraction
         const CORS_PROXIES = [
             'https://api.allorigins.win/raw?url=',
-            'https://api.codetabs.com/v1/proxy?quest=',
-            'https://thingproxy.freeboard.io/fetch/',
-            'https://cors.isomorphic-git.org/',
             'https://corsproxy.io/?',
             'https://cors-anywhere.herokuapp.com/'
         ];
@@ -2194,29 +2191,7 @@
                 
             } catch (error) {
                 debugLog(`Recipe extraction failed: ${error.message}`, 'error');
-                
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                
-                if (isMobile && error.message.includes('Mobile network is blocking')) {
-                    showMessage('Mobile network blocking detected. Try WiFi or use Create Recipe.', 'warning');
-                    
-                    // Show the create recipe button as fallback
-                    const createBtn = document.getElementById('createRecipeBtn');
-                    if (createBtn) {
-                        createBtn.style.display = 'inline-block';
-                        createBtn.onclick = () => {
-                            // You'll need to implement openCreateModal() if you haven't already
-                            alert('Manual recipe creation coming soon! For now, try WiFi or desktop.');
-                        };
-                        
-                        // Hide it after 15 seconds
-                        setTimeout(() => {
-                            createBtn.style.display = 'none';
-                        }, 15000);
-                    }
-                } else {
-                    showMessage(error.message);
-                }
+                showMessage(error.message);
             } finally {
                 setLoading(false);
                 debugLog('=== RECIPE EXTRACTION COMPLETED ===', 'info');
