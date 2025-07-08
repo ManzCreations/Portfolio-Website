@@ -1926,7 +1926,10 @@
         const CORS_PROXIES = [
             'https://api.allorigins.win/raw?url=',
             'https://corsproxy.io/?',
-            'https://cors-anywhere.herokuapp.com/'
+            'https://cors-anywhere.herokuapp.com/',
+            'https://api.codetabs.com/v1/proxy?quest=',
+            'https://thingproxy.freeboard.io/fetch/',
+            'https://cors.isomorphic-git.org/'
         ];
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxUULLe9sRmSRG7wvewTPgwKYBXd9yxhqQKKzT_XgeF2IPyJKPQ_HWEJduwu1bW81E8mw/exec';
         
@@ -2173,11 +2176,34 @@
                 
             } catch (error) {
                 debugLog(`Recipe extraction failed: ${error.message}`, 'error');
-                showMessage(error.message);
+    
+                const networkInfo = detectMobileNetwork();
+                let errorMessage = error.message;
+                
+                if (networkInfo.isMobile && error.message.includes('CORS proxies failed')) {
+                    errorMessage = `Mobile network restrictions are blocking recipe extraction. Try:\n• Switching to WiFi\n• Using a desktop computer\n• Manually copying the recipe content`;
+                }
+                
+                showMessage(errorMessage);
             } finally {
                 setLoading(false);
                 debugLog('=== RECIPE EXTRACTION COMPLETED ===', 'info');
             }
+        }
+
+        function detectMobileNetwork() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/.test(userAgent);
+            
+            // Check if we're on a mobile network vs WiFi (rough detection)
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            const isSlowConnection = connection && (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g');
+            
+            return {
+                isMobile,
+                isSlowConnection,
+                effectiveType: connection?.effectiveType || 'unknown'
+            };
         }
 
         // CORS-friendly Google Sheets functions
@@ -3129,8 +3155,37 @@
                 
                 // Try multiple CORS proxies
                 debugStep('Fetching HTML content', true);
-                html = await fetchWithFallback(url);
-                debugLog(`Successfully fetched HTML (${html.length} characters)`, 'success');
+                try {
+                    html = await fetchWithFallback(url);
+                    debugLog(`Successfully fetched HTML (${html.length} characters)`, 'success');
+                } catch (fetchError) {
+                    debugLog(`Failed to fetch HTML: ${fetchError.message}`, 'error');
+                    updateExtractionStats('Failed - Network', false, performance.now() - startTime, [fetchError.message]);
+                    
+                    // Return error recipe instead of throwing
+                    return {
+                        title: 'Network Error - Could Not Fetch Recipe',
+                        description: 'All proxy servers failed to fetch this recipe. This often happens on mobile networks or with blocked websites.',
+                        image: '',
+                        ingredients: [
+                            'Could not fetch recipe data due to network restrictions',
+                            'Try again later or use a different network',
+                            'Desktop computers typically have fewer restrictions'
+                        ],
+                        instructions: [
+                            'Recipe extraction failed due to network connectivity issues',
+                            'This is common on mobile networks which often block proxy servers',
+                            'Try accessing the original recipe directly at: ' + url
+                        ],
+                        prepTime: '',
+                        cookTime: '',
+                        totalTime: '',
+                        servings: '',
+                        url: url,
+                        error: true,
+                        errorMessage: fetchError.message
+                    };
+                }
                 
                 // Create a DOM parser to parse the HTML
                 const parser = new DOMParser();
@@ -3273,16 +3328,26 @@
                     debugLog(`Trying proxy ${i + 1}/${CORS_PROXIES.length}: ${proxy}`, 'info');
                     
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased timeout
+                    // Longer timeout for mobile networks
+                    const timeoutId = setTimeout(() => controller.abort(), 20000);
                     
-                    const response = await fetch(proxy + encodeURIComponent(url), {
+                    const proxyUrl = proxy + encodeURIComponent(url);
+                    debugLog(`Full proxy URL: ${proxyUrl}`, 'info');
+                    
+                    const response = await fetch(proxyUrl, {
                         signal: controller.signal,
                         headers: {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15',
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                            'Accept-Language': 'en-US,en;q=0.5',
+                            'Accept-Encoding': 'gzip, deflate',
+                            'Cache-Control': 'no-cache'
                         }
                     });
                     
                     clearTimeout(timeoutId);
+                    
+                    debugLog(`Proxy ${i + 1} response: ${response.status} ${response.statusText}`, 'info');
                     
                     if (response.ok) {
                         const html = await response.text();
@@ -3295,18 +3360,29 @@
                             return html;
                         } else {
                             debugLog(`Proxy ${i + 1} returned blocked/empty content`, 'warning');
-                            throw new Error('Blocked or empty response');
+                            lastError = new Error('Blocked or empty response');
+                            continue;
                         }
                     } else {
                         debugLog(`Proxy ${i + 1} failed with status: ${response.status}`, 'warning');
+                        lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
                 } catch (error) {
+                    clearTimeout(timeoutId);
                     debugLog(`Proxy ${i + 1} failed: ${error.message}`, 'warning');
                     lastError = error;
+                    
+                    // Add small delay between attempts on mobile
+                    if (i < CORS_PROXIES.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
                 }
             }
             
-            throw new Error(`All CORS proxies failed. Last error: ${lastError?.message || 'Unknown error'}`);
+            // Throw the actual error instead of just logging it
+            const errorMessage = `All CORS proxies failed. Last error: ${lastError?.message || 'Unknown error'}`;
+            debugLog(errorMessage, 'error');
+            throw new Error(errorMessage);
         }
 
         // Strategy 1: JSON-LD structured data
