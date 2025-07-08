@@ -3273,17 +3273,30 @@
                     debugLog(`Trying proxy ${i + 1}/${CORS_PROXIES.length}: ${proxy}`, 'info');
                     
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                    const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased timeout
                     
                     const response = await fetch(proxy + encodeURIComponent(url), {
-                        signal: controller.signal
+                        signal: controller.signal,
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        }
                     });
                     
                     clearTimeout(timeoutId);
                     
                     if (response.ok) {
+                        const html = await response.text();
                         debugLog(`Proxy ${i + 1} successful (${response.status})`, 'success');
-                        return await response.text();
+                        
+                        // Debug the response
+                        const isValidResponse = debugProxyResponse(html, url);
+                        
+                        if (isValidResponse) {
+                            return html;
+                        } else {
+                            debugLog(`Proxy ${i + 1} returned blocked/empty content`, 'warning');
+                            throw new Error('Blocked or empty response');
+                        }
                     } else {
                         debugLog(`Proxy ${i + 1} failed with status: ${response.status}`, 'warning');
                     }
@@ -3486,69 +3499,322 @@
 
                 debugLog(`Cleaned HTML (${cleanHtml.length} characters)`, 'info');
 
-                // Convert to plain text but preserve some structure
-                const textContent = cleanHtml
+                // Convert to plain text but preserve structure
+                let textContent = cleanHtml
                     .replace(/<\/?(h[1-6]|p|div|li|ul|ol)[^>]*>/gi, '\n')
                     .replace(/<[^>]*>/g, ' ')
                     .replace(/\s+/g, ' ')
                     .trim();
 
-                debugLog(`Extracted text content (${textContent.length} characters)`, 'info');
+                // CRITICAL: Decode HTML entities
+                textContent = textContent
+                    .replace(/&#32;/g, ' ')
+                    .replace(/&nbsp;/g, ' ')
+                    .replace(/&#36;/g, '$')
+                    .replace(/&amp;/g, '&')
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    .replace(/&quot;/g, '"');
 
-                // Improved ingredients regex
-                const ingredientsMatch = textContent.match(
-                    /(?:^|\n)\s*(?:ingredients?|what you[''′]?ll need|shopping list|recipe ingredients)[:\s]*\n?((?:(?!\n\s*(?:instructions?|directions?|method|preparation|steps|how to make|notes|nutrition)).{1,150}\n?){1,25})/im
-                );
+                debugLog(`Extracted and decoded text content (${textContent.length} characters)`, 'info');
 
-                // Improved instructions regex
-                const instructionsMatch = textContent.match(
-                    /(?:^|\n)\s*(?:instructions?|directions?|method|preparation|steps|how to make)[:\s]*\n?((?:(?!\n\s*(?:notes|tips|nutrition|storage|serving|dietary|health benefits|conclusion|related)).{20,300}\n?){1,20})/im
-                );
+                let ingredients = [];
+                let instructions = [];
+
+                // Add debugging call
+                debugTextParsing(html);
                 
+                // NEW APPROACH: Parse continuous text format from the FIRST sections (which have better structure)
+                
+                // Strategy 1: Extract ingredients from first section with improved parsing
+                const firstIngredientsMatch = textContent.match(/Ingredients([^]*?)Instructions/i);
+                if (firstIngredientsMatch) {
+                    const ingredientsText = firstIngredientsMatch[1];
+                    debugLog('Found first ingredients section, parsing...', 'info');
+                    
+                    // Use the new parsing function
+                    ingredients = parseIngredientsFromText(ingredientsText);
+                    debugLog(`Extracted ${ingredients.length} ingredients from first section`, 'success', ingredients.slice(0, 5));
+                }
+
+                // Strategy 2: Extract instructions from first section with improved parsing
+                const firstInstructionsMatch = textContent.match(/Instructions([^]*?)(?:Notes|Tips|Nutrition|Related|$)/i);
+                if (firstInstructionsMatch) {
+                    const instructionsText = firstInstructionsMatch[1];
+                    debugLog('Found first instructions section, parsing...', 'info');
+                    
+                    // Use the new parsing function
+                    instructions = parseInstructionsFromText(instructionsText);
+                    debugLog(`Extracted ${instructions.length} instructions from first section`, 'success', instructions.slice(0, 3));
+                }
+
                 // Extract time and serving information
                 const timeAndServings = extractTimeAndServings(doc, html);
 
-                debugLog('Text parsing pattern matches', 'info', {
-                    foundIngredients: !!ingredientsMatch,
-                    foundInstructions: !!instructionsMatch,
-                    ingredientsLength: ingredientsMatch?.[1]?.length || 0,
-                    instructionsLength: instructionsMatch?.[1]?.length || 0,
-                    totalTime: timeAndServings.totalTime || 'Not found',
-                    servings: timeAndServings.servings || 'Not found',
-                    ingredientsPreview: ingredientsMatch?.[1]?.substring(0, 100) + '...' || 'None',
-                    instructionsPreview: instructionsMatch?.[1]?.substring(0, 100) + '...' || 'None'
+                debugLog('Enhanced text parsing results', 'info', {
+                    ingredientCount: ingredients.length,
+                    instructionCount: instructions.length,
+                    sampleIngredients: ingredients.slice(0, 3),
+                    sampleInstructions: instructions.slice(0, 3)
                 });
 
-                if (ingredientsMatch || instructionsMatch) {
-                    const ingredients = ingredientsMatch ? parseTextIngredients(ingredientsMatch[1]) : [];
-                    const instructions = instructionsMatch ? parseTextInstructions(instructionsMatch[1]) : [];
-
-                    debugLog('Text parsing results', 'info', {
-                        ingredientCount: ingredients.length,
-                        instructionCount: instructions.length,
-                        totalTime: timeAndServings.totalTime || 'Not found',
-                        servings: timeAndServings.servings || 'Not found'
-                    });
-
-                    if (ingredients.length > 0 || instructions.length > 0) {
-                        return {
-                            title: extractGenericTitle(doc),
-                            description: extractMetaDescription(doc),
-                            image: extractGenericImage(doc),
-                            ingredients: extractAndFilterIngredients(ingredients),
-                            instructions: extractAndFilterInstructions(instructions),
-                            prepTime: timeAndServings.prepTime || '',
-                            cookTime: timeAndServings.cookTime || '',
-                            totalTime: timeAndServings.totalTime || '',
-                            servings: timeAndServings.servings || ''
-                        };
-                    }
+                if (ingredients.length > 0 || instructions.length > 0) {
+                    return {
+                        title: extractGenericTitle(doc),
+                        description: extractMetaDescription(doc),
+                        image: extractGenericImage(doc),
+                        ingredients: extractAndFilterIngredients(ingredients),
+                        instructions: extractAndFilterInstructions(instructions),
+                        prepTime: timeAndServings.prepTime || '',
+                        cookTime: timeAndServings.cookTime || '',
+                        totalTime: timeAndServings.totalTime || '',
+                        servings: timeAndServings.servings || ''
+                    };
                 }
+                
             } catch (error) {
                 debugLog(`Error in extractFromEnhancedText: ${error.message}`, 'error');
             }
             
             return null;
+        }
+
+        function parseIngredientsFromText(text) {
+            const ingredients = [];
+            
+            try {
+                debugLog('Parsing ingredients from enhanced text...', 'info');
+                
+                // Method 1: Look for ingredient sections with better patterns
+                const ingredientSectionPatterns = [
+                    /Ingredients([^]*?)(?:Instructions|Directions|Method|For the Steak|For the Lobster|$)/i,
+                    /For the [^:]*:([^]*?)(?:For the|Instructions|Directions|$)/gi
+                ];
+                
+                for (const pattern of ingredientSectionPatterns) {
+                    const matches = text.match(pattern);
+                    if (matches) {
+                        debugLog(`Found ingredient section with pattern`, 'success');
+                        
+                        if (pattern.global) {
+                            // Handle multiple "For the X:" sections
+                            matches.forEach(match => {
+                                const sectionIngredients = extractIngredientsFromSection(match);
+                                ingredients.push(...sectionIngredients);
+                            });
+                        } else {
+                            // Handle single ingredients section
+                            const sectionIngredients = extractIngredientsFromSection(matches[1]);
+                            ingredients.push(...sectionIngredients);
+                        }
+                    }
+                }
+                
+                // Method 2: Look for list patterns throughout the text
+                if (ingredients.length < 5) {
+                    debugLog('Trying broader ingredient patterns...', 'info');
+                    const broadIngredients = extractIngredientsFromBroadPatterns(text);
+                    ingredients.push(...broadIngredients);
+                }
+                
+                debugLog(`Extracted ${ingredients.length} ingredients total`, 'success', ingredients.slice(0, 5));
+                
+            } catch (error) {
+                debugLog(`Error parsing ingredients: ${error.message}`, 'error');
+            }
+            
+            return [...new Set(ingredients)]; // Remove duplicates
+        }
+
+        function extractIngredientsFromSection(sectionText) {
+            const ingredients = [];
+            
+            // Split by lines and clean
+            const lines = sectionText.split(/\n+/)
+                .map(line => line.trim())
+                .filter(line => line.length > 3);
+            
+            for (const line of lines) {
+                // Skip headers
+                if (line.match(/^(For the|Ingredients|Instructions)/i)) continue;
+                
+                // Look for ingredient patterns - be more permissive
+                const patterns = [
+                    /^\d+.*(?:oz|ounce|pound|lb|cup|tablespoon|teaspoon|tsp|tbsp|clove|steak|tail)/i,
+                    /^\d+\s+\w+.*(?:salt|pepper|butter|garlic|lemon|rosemary|thyme|parsley|chives)/i,
+                    /^[^\d]*(?:salt|pepper|butter|garlic|lemon|rosemary|thyme|parsley|chives|steak|lobster|filet)/i
+                ];
+                
+                const isIngredient = patterns.some(pattern => pattern.test(line)) ||
+                    line.match(/\b(?:oz|ounce|pound|lb|cup|tablespoon|teaspoon|tsp|tbsp|clove|minced|chopped|fresh|unsalted)\b/i);
+                
+                if (isIngredient && line.length > 5 && line.length < 200) {
+                    const cleaned = line.replace(/^[-•*]\s*/, '').trim();
+                    if (cleaned) {
+                        ingredients.push(cleaned);
+                    }
+                }
+            }
+            
+            return ingredients;
+        }
+
+        function extractIngredientsFromBroadPatterns(text) {
+            const ingredients = [];
+            
+            // Split entire text and look for ingredient-like lines
+            const allLines = text.split(/\n+/)
+                .map(line => line.trim())
+                .filter(line => line.length > 5 && line.length < 200);
+            
+            for (const line of allLines) {
+                // Skip obvious non-ingredients
+                if (line.match(/^(Instructions|Directions|Method|Notes|Tips|Total Time|Prep Time|Cook Time|Servings)/i)) continue;
+                
+                // Look for strong ingredient indicators
+                const hasStrongIndicators = line.match(/\b(?:\d+\s*(?:oz|ounce|pound|lb|cup|tablespoon|teaspoon|tsp|tbsp|clove)|salt|pepper|butter|garlic|lemon|rosemary|thyme|parsley|chives|steak|lobster|filet)\b/i);
+                
+                if (hasStrongIndicators) {
+                    const cleaned = line.replace(/^[-•*\d.\s]*/, '').trim();
+                    if (cleaned && !ingredients.some(ing => ing.toLowerCase().includes(cleaned.toLowerCase()))) {
+                        ingredients.push(cleaned);
+                    }
+                }
+            }
+            
+            return ingredients;
+        }
+
+        function parseInstructionsFromText(text) {
+            const instructions = [];
+            
+            try {
+                debugLog('Parsing instructions from enhanced text...', 'info');
+                
+                // Method 1: Look for instructions section
+                const instructionSectionMatch = text.match(/Instructions([^]*?)(?:Notes|Tips|Nutrition|Related|$)/i);
+                if (instructionSectionMatch) {
+                    debugLog('Found instructions section', 'success');
+                    const sectionInstructions = extractInstructionsFromSection(instructionSectionMatch[1]);
+                    instructions.push(...sectionInstructions);
+                }
+                
+                // Method 2: Look for numbered or bulleted instruction patterns
+                if (instructions.length < 5) {
+                    debugLog('Trying broader instruction patterns...', 'info');
+                    const broadInstructions = extractInstructionsFromBroadPatterns(text);
+                    instructions.push(...broadInstructions);
+                }
+                
+                debugLog(`Extracted ${instructions.length} instructions total`, 'success', instructions.slice(0, 3));
+                
+            } catch (error) {
+                debugLog(`Error parsing instructions: ${error.message}`, 'error');
+            }
+            
+            return instructions;
+        }
+
+        function extractInstructionsFromSection(sectionText) {
+            const instructions = [];
+            
+            // Split by lines and clean
+            const lines = sectionText.split(/\n+/)
+                .map(line => line.trim())
+                .filter(line => line.length > 15);
+            
+            for (const line of lines) {
+                // Skip headers
+                if (line.match(/^(Instructions|Directions|Method|Notes|Tips)/i)) continue;
+                
+                // Look for instruction patterns
+                const hasCookingWords = line.match(/\b(?:season|preheat|grill|cook|heat|place|serve|butterfly|drizzle|garnish|allow|form|squeeze|plate|minutes|degrees|combine|mix|refrigerate|sear|sides|doneness|melt|infuse)\b/i);
+                const isReasonableLength = line.length >= 20 && line.length <= 500;
+                
+                if (hasCookingWords && isReasonableLength) {
+                    const cleaned = line.replace(/^[-•*\d.\s]*/, '').trim();
+                    if (cleaned) {
+                        instructions.push(cleaned);
+                    }
+                }
+            }
+            
+            return instructions;
+        }
+
+        function extractInstructionsFromBroadPatterns(text) {
+            const instructions = [];
+            
+            // Split entire text and look for instruction-like sentences
+            const allLines = text.split(/\n+/)
+                .map(line => line.trim())
+                .filter(line => line.length > 20 && line.length < 500);
+            
+            for (const line of allLines) {
+                // Skip obvious non-instructions
+                if (line.match(/^(Ingredients|For the|Notes|Tips|Nutrition|Total Time|Prep Time|Cook Time|Servings)/i)) continue;
+                
+                // Look for strong instruction indicators
+                const hasStrongIndicators = line.match(/\b(?:season|preheat|grill|cook|heat|place|serve|butterfly|drizzle|garnish|allow|form|squeeze|plate|combine|mix|refrigerate|sear|doneness|melt|infuse|minutes|degrees|sides|until)\b/i);
+                const startsWithAction = line.match(/^(?:Season|Preheat|Grill|Cook|Heat|Place|Serve|Butterfly|Drizzle|Garnish|Allow|Form|Squeeze|Plate|Combine|Mix|Refrigerate|In a|During|About)/i);
+                
+                if (hasStrongIndicators || startsWithAction) {
+                    const cleaned = line.replace(/^[-•*\d.\s]*/, '').trim();
+                    if (cleaned && !instructions.some(inst => inst.toLowerCase().includes(cleaned.toLowerCase().substring(0, 30)))) {
+                        instructions.push(cleaned);
+                    }
+                }
+            }
+            
+            return instructions;
+        }
+
+        function parseIngredientSection(section) {
+            const lines = section.split(/\n+/)
+                .map(line => line.trim())
+                .filter(line => line.length > 3);
+            
+            const ingredients = [];
+            for (const line of lines) {
+                // Skip section headers
+                if (line.match(/^For the/i) || line.match(/^(Instructions|Directions|Method):/i)) continue;
+                
+                // Look for ingredient patterns
+                if (line.match(/^\d+|[-•]/) || 
+                    line.match(/\b(?:cup|tablespoon|teaspoon|pound|ounce|gram|tsp|tbsp|lb|oz|clove|slice)\b/i) ||
+                    line.match(/\b(?:salt|pepper|garlic|butter|oil|sugar|flour|cheese|onion|lemon)\b/i)) {
+                    const cleanLine = line.replace(/^[-•\d\s]*/, '').trim();
+                    if (cleanLine.length > 3) {
+                        ingredients.push(cleanLine);
+                    }
+                }
+            }
+            
+            return ingredients;
+        }
+
+        function parseInstructionSection(section) {
+            const lines = section.split(/\n+/)
+                .map(line => line.trim())
+                .filter(line => line.length > 10);
+            
+            const instructions = [];
+            for (const line of lines) {
+                // Skip obvious non-instructions
+                if (line.match(/^(Ingredients|For the|Tried this recipe|Notes|Tips)/i)) continue;
+                
+                // Look for instruction patterns - be more permissive
+                const hasInstructionWords = line.match(/\b(?:heat|cook|add|mix|grill|bake|season|place|serve|prepare|cut|slice|combine|stir|remove|butterfly|drizzle|garnish|allow|form|squeeze|plate|preheat|minutes|degrees|until|about|during)\b/i);
+                const hasGoodLength = line.length >= 15 && line.length <= 500;
+                const isNotObviousIngredient = !line.match(/^[\d\s]*(?:cup|tsp|tbsp|oz|lb|ounce|pound|clove|slice)/i);
+                
+                if (hasInstructionWords && hasGoodLength && isNotObviousIngredient) {
+                    const cleanLine = line.replace(/^[-•\d\s]*/, '').trim();
+                    instructions.push(cleanLine);
+                }
+            }
+            
+            return instructions;
         }
 
         // Parse ingredients from text
@@ -3585,6 +3851,37 @@
                 ingredients: ingredients.slice(0, 5)
             });
             return ingredients;
+        }
+
+        function debugTextParsing(html) {
+            console.group('🔍 TEXT PARSING DEBUG');
+            
+            // Show first part of cleaned text
+            const cleanHtml = html
+                .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+            
+            let textContent = cleanHtml
+                .replace(/<\/?(h[1-6]|p|div|li|ul|ol)[^>]*>/gi, '\n')
+                .replace(/<[^>]*>/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            
+            console.log('Raw text sample (first 1000 chars):', textContent.substring(0, 1000));
+            
+            // Look for ingredient section
+            const ingredientMatch = textContent.match(/Ingredients([^]*?)Instructions/i);
+            if (ingredientMatch) {
+                console.log('Found ingredient section:', ingredientMatch[1].substring(0, 500));
+            }
+            
+            // Look for instruction section  
+            const instructionMatch = textContent.match(/Instructions([^]*?)(?:Notes|Tips|$)/i);
+            if (instructionMatch) {
+                console.log('Found instruction section:', instructionMatch[1].substring(0, 800));
+            }
+            
+            console.groupEnd();
         }
 
         // Parse instructions from text  
@@ -3627,26 +3924,17 @@
             
             if (!doc) {
                 debugLog('No document provided to extractFromGenericSelectors', 'error');
-                return {
-                    title: 'Error',
-                    description: '',
-                    image: '',
-                    ingredients: ['Error: No document provided'],
-                    instructions: ['Error: No document provided'],
-                    prepTime: '',
-                    cookTime: '',
-                    totalTime: '',
-                    servings: ''
-                };
+                return createFailsafeRecipe('Error: No document provided');
             }
             
             try {
+                // FIXED: Only use valid CSS selectors (removed :contains() selectors)
                 const ingredientSelectors = [
                     '.recipe-card-ingredients li', '.wp-block-recipe-card-ingredients li',
                     '.recipe-ingredients li', '.ingredients li', 'li[class*="ingredient"]',
                     '.recipe-ingredient', '.ingredient', '[class*="ingredient"]',
                     '.entry-content ul li', '.post-content ul li',
-                    'ul li', // Very generic fallback
+                    'ul li' // Very generic fallback
                 ];
                 
                 const instructionSelectors = [
@@ -3655,20 +3943,35 @@
                     '.recipe-instruction', '.instruction', '[class*="instruction"]',
                     '.method-step', '.recipe-step', '.directions li',
                     '.entry-content ol li', '.post-content ol li',
-                    'ol li', // Very generic fallback
+                    'ol li' // Very generic fallback
                 ];
 
-                const ingredients = extractListBySelectors(doc, ingredientSelectors);
-                const instructions = extractListBySelectors(doc, instructionSelectors);
+                let ingredients = extractListBySelectors(doc, ingredientSelectors);
+                let instructions = extractListBySelectors(doc, instructionSelectors);
                 
-                // Extract time and serving information (with null check for html)
+                // If still no ingredients/instructions, try scanning ALL text content
+                if (ingredients.length === 0 || instructions.length === 0) {
+                    debugLog('Scanning all page content for recipe data...', 'info');
+                    const pageContent = doc.body ? doc.body.textContent : doc.textContent || '';
+                    debugLog(`Total page content length: ${pageContent.length}`, 'info');
+                    
+                    if (pageContent.length > 100) {
+                        const parsed = parsePageContent(pageContent);
+                        if (parsed.ingredients.length > ingredients.length) {
+                            ingredients = parsed.ingredients;
+                        }
+                        if (parsed.instructions.length > instructions.length) {
+                            instructions = parsed.instructions;
+                        }
+                    }
+                }
+                
+                // Extract time and serving information
                 const timeAndServings = extractTimeAndServings(doc, html);
 
                 debugLog('Generic selector results', 'info', {
                     ingredientCount: ingredients.length,
                     instructionCount: instructions.length,
-                    totalTime: timeAndServings.totalTime || 'Not found',
-                    servings: timeAndServings.servings || 'Not found',
                     sampleIngredients: ingredients.slice(0, 3),
                     sampleInstructions: instructions.slice(0, 2)
                 });
@@ -3686,21 +3989,84 @@
                 };
             } catch (error) {
                 debugLog(`Error in extractFromGenericSelectors: ${error.message}`, 'error');
-                return {
-                    title: extractGenericTitle(doc) || 'Recipe',
-                    description: extractMetaDescription(doc) || '',
-                    image: extractGenericImage(doc) || '',
-                    ingredients: ['Error extracting ingredients'],
-                    instructions: ['Error extracting instructions'],
-                    prepTime: '',
-                    cookTime: '',
-                    totalTime: '',
-                    servings: ''
-                };
+                return createFailsafeRecipe('Error extracting recipe data');
             }
         }
 
         // Helper functions
+        function parsePageContent(pageContent) {
+            const ingredients = [];
+            const instructions = [];
+            
+            try {
+                // Look for ingredient patterns in the entire page text
+                const lines = pageContent.split(/\n+/).map(line => line.trim()).filter(line => line.length > 3);
+                
+                let inIngredientsSection = false;
+                let inInstructionsSection = false;
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    const nextLine = lines[i + 1] || '';
+                    
+                    // Check for section headers
+                    if (line.match(/^(Ingredients|For the)/i)) {
+                        inIngredientsSection = true;
+                        inInstructionsSection = false;
+                        continue;
+                    }
+                    
+                    if (line.match(/^(Instructions|Directions|Method|Prepare|Steps)/i)) {
+                        inInstructionsSection = true;
+                        inIngredientsSection = false;
+                        continue;
+                    }
+                    
+                    // Look for ingredient patterns
+                    if (inIngredientsSection || 
+                        line.match(/^[-•]\s*\d+.*(?:cup|tsp|tbsp|oz|lb|clove|slice|steak|lobster|butter|salt|pepper)/i)) {
+                        const cleanLine = line.replace(/^[-•\s]*/, '').trim();
+                        if (cleanLine.length > 5 && cleanLine.length < 200) {
+                            ingredients.push(cleanLine);
+                        }
+                    }
+                    
+                    // Look for instruction patterns
+                    if (inInstructionsSection || 
+                        line.match(/\b(?:season|preheat|grill|cook|heat|place|serve|butterfly|drizzle|garnish)\b/i)) {
+                        if (line.length > 20 && line.length < 500) {
+                            const cleanLine = line.replace(/^[-•\d\s]*/, '').trim();
+                            instructions.push(cleanLine);
+                        }
+                    }
+                    
+                    // Stop at certain keywords
+                    if (line.match(/^(Notes|Tips|Nutrition|Related|Share)/i)) {
+                        break;
+                    }
+                }
+                
+            } catch (error) {
+                debugLog(`Error parsing page content: ${error.message}`, 'warning');
+            }
+            
+            return { ingredients, instructions };
+        }
+
+        function createFailsafeRecipe(errorMsg) {
+            return {
+                title: 'Recipe Extraction Failed',
+                description: 'Could not extract recipe data from this site',
+                image: '',
+                ingredients: [errorMsg, 'Please check the original recipe link'],
+                instructions: ['Visit the original recipe for instructions'],
+                prepTime: '',
+                cookTime: '',
+                totalTime: '',
+                servings: ''
+            };
+        }
+
         function extractBySelectors(doc, selectors, property = 'textContent') {
             for (const selector of selectors) {
                 const element = doc.querySelector(selector);
@@ -3775,15 +4141,55 @@
         }
 
         function extractGenericTitle(doc) {
-            const title = cleanText(
-                doc.querySelector('h1')?.textContent || 
-                doc.querySelector('.recipe-title')?.textContent || 
-                doc.querySelector('[class*="title"]')?.textContent ||
-                doc.querySelector('title')?.textContent ||
-                'Untitled Recipe'
-            );
-            debugLog(`Extracted title: ${title}`, 'info');
-            return title;
+            if (!doc) return 'Untitled Recipe';
+            
+            // Try multiple title sources in order of preference
+            const titleSources = [
+                () => doc.querySelector('h1.entry-title')?.textContent,
+                () => doc.querySelector('h1.post-title')?.textContent,
+                () => doc.querySelector('h1[class*="title"]')?.textContent,
+                () => doc.querySelector('.recipe-title')?.textContent,
+                () => doc.querySelector('h1')?.textContent,
+                () => doc.querySelector('title')?.textContent,
+                () => doc.querySelector('meta[property="og:title"]')?.content
+            ];
+            
+            for (const getTitle of titleSources) {
+                try {
+                    const title = getTitle();
+                    if (title && title.trim().length > 0) {
+                        const cleanTitle = cleanText(title);
+                        if (cleanTitle && cleanTitle !== 'Untitled Recipe') {
+                            debugLog(`Extracted title: ${cleanTitle}`, 'info');
+                            return cleanTitle;
+                        }
+                    }
+                } catch (e) {
+                    // Continue to next title source
+                }
+            }
+            
+            debugLog('No title found, using fallback', 'warning');
+            return 'Untitled Recipe';
+        }
+
+        function debugProxyResponse(html, url) {
+            console.group('🔍 PROXY RESPONSE DEBUG');
+            console.log('URL:', url);
+            console.log('HTML Length:', html.length);
+            console.log('First 500 characters:', html.substring(0, 500));
+            console.log('Contains title tag:', html.includes('<title>'));
+            console.log('Contains body tag:', html.includes('<body>'));
+            console.log('Contains script tags:', html.includes('<script>'));
+            console.log('Looks like error page:', html.includes('error') || html.includes('404') || html.includes('access denied'));
+            console.groupEnd();
+            
+            // If HTML is suspiciously short, it's likely blocked
+            if (html.length < 1000) {
+                debugLog('⚠️ HTML content suspiciously short - proxy may be blocked', 'warning');
+                return false;
+            }
+            return true;
         }
 
         function extractMetaDescription(doc) {
