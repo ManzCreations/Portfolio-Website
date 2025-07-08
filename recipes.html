@@ -3476,14 +3476,14 @@
         //         }
         //     }
             
-            // All proxies failed
-            const errorMessage = isMobile ? 
-                'Mobile network is blocking recipe extraction. Try switching to WiFi or use manual entry.' :
-                `All CORS proxies failed. Last error: ${lastError?.message || 'Unknown error'}`;
+        //     // All proxies failed
+        //     const errorMessage = isMobile ? 
+        //         'Mobile network is blocking recipe extraction. Try switching to WiFi or use manual entry.' :
+        //         `All CORS proxies failed. Last error: ${lastError?.message || 'Unknown error'}`;
             
-            debugLog(errorMessage, 'error');
-            throw new Error(errorMessage);
-        }
+        //     debugLog(errorMessage, 'error');
+        //     throw new Error(errorMessage);
+        // }
 
         // Strategy 1: JSON-LD structured data
         function extractFromJsonLD(doc) {
