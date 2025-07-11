@@ -107,123 +107,6 @@
             transform: none;
         }
 
-        /* Debug Panel Styles */
-        .debug-panel {
-            background: #1e1e1e;
-            color: #ffffff;
-            border-radius: 10px;
-            margin: 20px 0;
-            border: 2px solid #444;
-            overflow: hidden;
-        }
-
-        .debug-header {
-            background: #2d2d2d;
-            padding: 15px 20px;
-            border-bottom: 1px solid #444;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .debug-title {
-            font-weight: bold;
-            color: #00d5ff;
-        }
-
-        .debug-toggle {
-            background: #007bb5;
-            color: white;
-            border: none;
-            padding: 5px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .debug-content {
-            padding: 15px 20px;
-            max-height: 400px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-
-        .debug-log {
-            margin: 5px 0;
-            padding: 5px 0;
-        }
-
-        .debug-log.success {
-            color: #4CAF50;
-        }
-
-        .debug-log.warning {
-            color: #FF9800;
-        }
-
-        .debug-log.error {
-            color: #f44336;
-        }
-
-        .debug-log.info {
-            color: #2196F3;
-        }
-
-        .debug-timestamp {
-            color: #888;
-            font-size: 11px;
-        }
-
-        .debug-data {
-            background: #2d2d2d;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border-left: 3px solid #00d5ff;
-        }
-
-        .debug-step {
-            background: #2a2a2a;
-            padding: 8px 12px;
-            margin: 8px 0;
-            border-radius: 5px;
-            border-left: 3px solid #4CAF50;
-        }
-
-        .debug-step.failed {
-            border-left-color: #f44336;
-        }
-
-        .extraction-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 15px 0;
-            padding: 15px;
-            background: #2d2d2d;
-            border-radius: 8px;
-        }
-
-        .stat-item {
-            text-align: center;
-            padding: 10px;
-            background: #3d3d3d;
-            border-radius: 5px;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #00d5ff;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #ccc;
-        }
-
         .recipe-grid {
             display: flex;
             flex-direction: column;
@@ -576,69 +459,87 @@
 
         @media only screen and (max-width: 768px) {
             .recipe-card {
-                padding: 12px;
-                min-height: 80px;
+                padding: 10px;
+                min-height: 70px;
             }
             
             .recipe-card img {
-                width: 60px;
-                height: 60px;
-                margin-right: 15px;
+                width: 50px;
+                height: 50px;
+                margin-right: 12px;
             }
             
             .recipe-title {
-                font-size: 16px;
+                font-size: 15px;
+                margin-bottom: 4px;
             }
             
             .recipe-meta {
-                font-size: 12px;
-                gap: 10px;
+                font-size: 11px;
+                gap: 8px;
+                margin-bottom: 2px;
             }
             
             .recipe-description {
-                font-size: 12px;
+                font-size: 11px;
                 -webkit-line-clamp: 1;
             }
             
             .recipe-actions {
-                gap: 6px;
+                gap: 5px;
             }
             
             .view-btn, .delete-btn {
-                width: 32px;
-                height: 32px;
-                font-size: 12px;
+                width: 30px;
+                height: 30px;
+                font-size: 11px;
             }
         }
 
         @media only screen and (max-width: 480px) {
             .recipe-card {
-                flex-direction: column;
-                text-align: center;
-                padding: 15px;
+                padding: 8px;
+                min-height: 60px;
+                /* Keep horizontal layout for compactness */
             }
             
             .recipe-card img {
-                margin: 0 0 10px 0;
-                width: 60px;
-                height: 60px;
-            }
-            
-            .recipe-card-content {
-                flex-direction: column;
-                align-items: center;
-                gap: 10px;
-            }
-            
-            .recipe-info {
-                margin-right: 0;
-                text-align: center;
+                width: 45px;
+                height: 45px;
+                margin-right: 10px;
             }
             
             .recipe-title {
+                font-size: 14px;
+                margin-bottom: 3px;
+                /* Allow wrapping but keep compact */
                 white-space: normal;
-                text-overflow: unset;
-                overflow: visible;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+            }
+            
+            .recipe-meta {
+                font-size: 10px;
+                gap: 6px;
+                margin-bottom: 1px;
+            }
+            
+            .recipe-description {
+                font-size: 10px;
+                -webkit-line-clamp: 1;
+            }
+            
+            .recipe-actions {
+                gap: 4px;
+            }
+            
+            .view-btn, .delete-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 10px;
             }
         }
 
@@ -1680,16 +1581,6 @@
             }
         }
 
-        .mobile-notice {
-            background: #ff9800;
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            text-align: center;
-            font-size: 14px;
-        }
-
         .create-recipe-btn {
             background: #4CAF50 !important;
         }
@@ -1948,9 +1839,6 @@
         ];
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxUULLe9sRmSRG7wvewTPgwKYBXd9yxhqQKKzT_XgeF2IPyJKPQ_HWEJduwu1bW81E8mw/exec';
         
-        // Set this to false to use Google Sheets, true to use localStorage for testing
-        const USE_LOCAL_STORAGE = true;
-        
         // Global variables
         let recipes = [];
         let currentPassword = null;
@@ -2196,21 +2084,6 @@
                 setLoading(false);
                 debugLog('=== RECIPE EXTRACTION COMPLETED ===', 'info');
             }
-        }
-
-        function detectMobileNetwork() {
-            const userAgent = navigator.userAgent.toLowerCase();
-            const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/.test(userAgent);
-            
-            // Check if we're on a mobile network vs WiFi (rough detection)
-            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            const isSlowConnection = connection && (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g');
-            
-            return {
-                isMobile,
-                isSlowConnection,
-                effectiveType: connection?.effectiveType || 'unknown'
-            };
         }
 
         // CORS-friendly Google Sheets functions
@@ -2545,24 +2418,6 @@
                 const baseText = 'Add, organize, and manage your favorite dinner recipes. Simply paste a recipe URL to automatically extract ingredients and cooking instructions.';
                 headerElement.textContent = baseText + statusText;
             }
-        }
-
-        // Add saving indicator to the DOM (add this after DOMContentLoaded)
-        function addSavingIndicator() {
-            const indicator = document.createElement('div');
-            indicator.id = 'savingIndicator';
-            indicator.className = 'saving-indicator';
-            indicator.innerHTML = ' Saving changes...';
-            document.body.appendChild(indicator);
-        }
-
-        // Add saving indicator to the DOM
-        function addSavingIndicator() {
-            const indicator = document.createElement('div');
-            indicator.id = 'savingIndicator';
-            indicator.className = 'saving-indicator';
-            indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving changes...';
-            document.body.appendChild(indicator);
         }
 
         // Render recipe content (view or edit mode)
@@ -3075,34 +2930,6 @@
             console.groupEnd();
         }
 
-        function displayExtractionStats() {
-            const statsDiv = document.createElement('div');
-            statsDiv.className = 'extraction-stats';
-            statsDiv.innerHTML = `
-                <div class="stat-item">
-                    <div class="stat-value">${extractionStats.totalAttempts}</div>
-                    <div class="stat-label">Total Attempts</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${extractionStats.successfulExtractions}</div>
-                    <div class="stat-label">Successful</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${Math.round((extractionStats.successfulExtractions / extractionStats.totalAttempts) * 100) || 0}%</div>
-                    <div class="stat-label">Success Rate</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${Object.keys(extractionStats.strategiesUsed).length}</div>
-                    <div class="stat-label">Strategies Tried</div>
-                </div>
-            `;
-            
-            // Remove existing stats and add new ones
-            const existingStats = debugLogsContainer.querySelector('.extraction-stats');
-            if (existingStats) existingStats.remove();
-            debugLogsContainer.insertBefore(statsDiv, debugLogsContainer.firstChild);
-        }
-
         // Domain-specific extraction rules inspired by recipe-scrapers
         const DOMAIN_RULES = {
             'therealfooddietitians.com': {
@@ -3378,87 +3205,6 @@
             
             throw new Error(`All CORS proxies failed. Last error: ${lastError?.message || 'Unknown error'}`);
         }
-
-        // // Try multiple CORS proxies until one works
-        // async function fetchWithFallback(url) {
-        //     let lastError;
-        //     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            
-        //     debugLog(`Device type: ${isMobile ? 'Mobile' : 'Desktop'}`, 'info');
-            
-        //     for (let i = 0; i < CORS_PROXIES.length; i++) {
-        //         const proxy = CORS_PROXIES[i];
-        //         try {
-        //             debugLog(`Trying proxy ${i + 1}/${CORS_PROXIES.length}: ${proxy}`, 'info');
-                    
-        //             const controller = new AbortController();
-        //             // Longer timeout for mobile networks
-        //             const timeoutId = setTimeout(() => controller.abort(), isMobile ? 25000 : 15000);
-                    
-        //             const proxyUrl = proxy + encodeURIComponent(url);
-                    
-        //             // Mobile-specific headers
-        //             const headers = {
-        //                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        //                 'Accept-Language': 'en-US,en;q=0.5',
-        //                 'Cache-Control': 'no-cache',
-        //                 'Pragma': 'no-cache'
-        //             };
-                    
-        //             // Use desktop user agent on mobile to avoid blocking
-        //             if (isMobile) {
-        //                 headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
-        //             }
-                    
-        //             debugLog(`Fetching: ${proxyUrl.substring(0, 100)}...`, 'info');
-                    
-        //             const response = await fetch(proxyUrl, {
-        //                 signal: controller.signal,
-        //                 headers: headers,
-        //                 method: 'GET',
-        //                 mode: 'cors',
-        //                 credentials: 'omit'
-        //             });
-                    
-        //             clearTimeout(timeoutId);
-                    
-        //             debugLog(`Proxy ${i + 1} response: ${response.status} ${response.statusText}`, 'info');
-                    
-        //             if (response.ok) {
-        //                 const html = await response.text();
-        //                 debugLog(`Proxy ${i + 1} successful (${response.status}) - ${html.length} chars`, 'success');
-                        
-        //                 // Validate response
-        //                 if (html.length < 1000) {
-        //                     debugLog(`Proxy ${i + 1} returned suspiciously short content`, 'warning');
-        //                     throw new Error('Response too short - likely blocked');
-        //                 }
-                        
-        //                 return html;
-        //             } else {
-        //                 debugLog(`Proxy ${i + 1} failed with status: ${response.status}`, 'warning');
-        //                 lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
-        //             }
-        //         } catch (error) {
-        //             debugLog(`Proxy ${i + 1} failed: ${error.message}`, 'warning');
-        //             lastError = error;
-                    
-        //             // Add delay between attempts on mobile to avoid rate limiting
-        //             if (isMobile && i < CORS_PROXIES.length - 1) {
-        //                 debugLog(`Waiting 2 seconds before next attempt...`, 'info');
-        //                 await new Promise(resolve => setTimeout(resolve, 2000));
-        //             }
-        //         }
-        //     }
-            
-        //     // All proxies failed
-        //     const errorMessage = isMobile ? 
-        //         'Mobile network is blocking recipe extraction. Try switching to WiFi or use manual entry.' :
-        //         `All CORS proxies failed. Last error: ${lastError?.message || 'Unknown error'}`;
-            
-        //     debugLog(errorMessage, 'error');
-        //     throw new Error(errorMessage);
-        // }
 
         // Strategy 1: JSON-LD structured data
         function extractFromJsonLD(doc) {
@@ -3920,30 +3666,6 @@
             return instructions;
         }
 
-        function parseIngredientSection(section) {
-            const lines = section.split(/\n+/)
-                .map(line => line.trim())
-                .filter(line => line.length > 3);
-            
-            const ingredients = [];
-            for (const line of lines) {
-                // Skip section headers
-                if (line.match(/^For the/i) || line.match(/^(Instructions|Directions|Method):/i)) continue;
-                
-                // Look for ingredient patterns
-                if (line.match(/^\d+|[-•]/) || 
-                    line.match(/\b(?:cup|tablespoon|teaspoon|pound|ounce|gram|tsp|tbsp|lb|oz|clove|slice)\b/i) ||
-                    line.match(/\b(?:salt|pepper|garlic|butter|oil|sugar|flour|cheese|onion|lemon)\b/i)) {
-                    const cleanLine = line.replace(/^[-•\d\s]*/, '').trim();
-                    if (cleanLine.length > 3) {
-                        ingredients.push(cleanLine);
-                    }
-                }
-            }
-            
-            return ingredients;
-        }
-
         function parseInstructionSection(section) {
             const lines = section.split(/\n+/)
                 .map(line => line.trim())
@@ -3966,42 +3688,6 @@
             }
             
             return instructions;
-        }
-
-        // Parse ingredients from text
-        function parseTextIngredients(text) {
-            debugLog('Parsing ingredients from text...', 'info');
-            
-            // Split on newlines and clean up
-            const lines = text.split(/\n+/)
-                .map(line => cleanText(line))
-                .filter(line => line.length > 2);
-
-            debugLog(`Found ${lines.length} potential ingredient lines`, 'info', {
-                firstFew: lines.slice(0, 5)
-            });
-
-            const ingredients = [];
-            for (const line of lines) {
-                // Skip obvious non-ingredients
-                if (line.match(/^(ingredients?|instructions?|directions?|notes?|tips?|method|equipment|nutrition|recipe|print|save|prep time|cook time|total time|servings|calories)$/i)) continue;
-                if (line.length > 200) continue; // Skip long paragraphs
-                if (line.length < 5) continue; // Skip very short lines
-                
-                // Look for ingredient patterns (more permissive)
-                const hasNumber = line.match(/^\d+|[\d\/\-\.]+/); // Starts with number or contains fractions
-                const hasMeasurement = line.match(/\b(?:cup|tablespoon|teaspoon|pound|ounce|gram|liter|tsp|tbsp|lb|oz|kg|g|ml|l|clove|slice|dash|pinch|can|jar|package|pkg|head|bunch|medium|large|small)\b/i);
-                const hasFoodWords = line.match(/\b(?:oil|salt|pepper|onion|garlic|butter|cheese|flour|sugar|egg|milk|water|sauce|spice|herb|chicken|beef|pork|fish|tomato|potato|carrot|celery|rice|pasta|bread|cream|wine|broth|stock|lemon|lime|apple|banana|spinach|lettuce|mushroom|bell|chili|paprika|oregano|basil|thyme|rosemary|cilantro|parsley|ginger|vinegar|honey|olive|vegetable|canola|coconut|vanilla|chocolate|nuts|almonds|cashews|walnuts|pecans)\b/i);
-                
-                if (hasNumber || hasMeasurement || hasFoodWords) {
-                    ingredients.push(line);
-                }
-            }
-            
-            debugLog(`Extracted ${ingredients.length} ingredients from text`, 'info', {
-                ingredients: ingredients.slice(0, 5)
-            });
-            return ingredients;
         }
 
         function debugTextParsing(html) {
@@ -4033,40 +3719,6 @@
             }
             
             console.groupEnd();
-        }
-
-        // Parse instructions from text  
-        function parseTextInstructions(text) {
-            debugLog('Parsing instructions from text...', 'info');
-            
-            // Split on newlines and clean up
-            const lines = text.split(/\n+/)
-                .map(line => cleanText(line))
-                .filter(line => line.length > 15);
-
-            debugLog(`Found ${lines.length} potential instruction lines`, 'info', {
-                firstFew: lines.slice(0, 3)
-            });
-
-            const instructions = [];
-            for (const line of lines) {
-                // Skip headers
-                if (line.match(/^(ingredients?|instructions?|directions?|notes?|tips?|method|equipment|nutrition|recipe|print|save|prep time|cook time|total time|servings|calories)$/i)) continue;
-                
-                // Look for instruction patterns (more permissive)
-                const hasCookingWords = line.match(/\b(?:add|mix|stir|cook|bake|heat|boil|preheat|combine|place|pour|serve|garnish|season|sear|brown|saute|simmer|cover|remove|chop|dice|slice|mince|cut|blend|whisk|beat|fold|toss|sprinkle|drizzle|marinate|roast|broil|grill|fry|steam|reduce|thicken|melt|soften|tender|golden|crispy|bubbling|until|degrees|minutes|hours|oven|skillet|pan|pot|bowl|dish)\b/i);
-                const hasSequentialWords = line.match(/\b(?:first|then|next|finally|meanwhile|while|after|before|once|when|until|step|continue|repeat)\b/i);
-                const isReasonableLength = line.length >= 20 && line.length <= 500;
-                
-                if ((hasCookingWords || hasSequentialWords) && isReasonableLength) {
-                    instructions.push(line);
-                }
-            }
-            
-            debugLog(`Extracted ${instructions.length} instructions from text`, 'info', {
-                instructions: instructions.slice(0, 3)
-            });
-            return instructions;
         }
 
         // Strategy 4: Generic CSS selectors
@@ -4322,25 +3974,6 @@
             
             debugLog('No title found, using fallback', 'warning');
             return 'Untitled Recipe';
-        }
-
-        function debugProxyResponse(html, url) {
-            console.group('🔍 PROXY RESPONSE DEBUG');
-            console.log('URL:', url);
-            console.log('HTML Length:', html.length);
-            console.log('First 500 characters:', html.substring(0, 500));
-            console.log('Contains title tag:', html.includes('<title>'));
-            console.log('Contains body tag:', html.includes('<body>'));
-            console.log('Contains script tags:', html.includes('<script>'));
-            console.log('Looks like error page:', html.includes('error') || html.includes('404') || html.includes('access denied'));
-            console.groupEnd();
-            
-            // If HTML is suspiciously short, it's likely blocked
-            if (html.length < 1000) {
-                debugLog('⚠️ HTML content suspiciously short - proxy may be blocked', 'warning');
-                return false;
-            }
-            return true;
         }
 
         function extractMetaDescription(doc) {
@@ -4828,68 +4461,6 @@
             return '';
         }
 
-        function debugRecipeLoading() {
-            console.log('=== RECIPE LOADING DEBUG ===');
-            console.log('Current password:', currentPassword ? '***' + currentPassword.slice(-2) : 'none');
-            console.log('Is session only:', isSessionOnly);
-            console.log('Recipes in local array:', recipes.length);
-            console.log('Recipe cards in DOM:', document.querySelectorAll('.recipe-card').length);
-            
-            console.log('\nLocal recipes array:');
-            recipes.forEach((recipe, index) => {
-                console.log(`${index + 1}. ID: "${recipe.id}" (${typeof recipe.id}) - Title: "${recipe.title}"`);
-            });
-            
-            console.log('\nRecipe cards in DOM:');
-            const cards = document.querySelectorAll('.recipe-card');
-            cards.forEach((card, index) => {
-                const onclick = card.getAttribute('onclick');
-                const id = onclick ? onclick.match(/'([^']+)'/)?.[1] : 'unknown';
-                console.log(`${index + 1}. DOM ID: "${id}" - Title: "${card.querySelector('.recipe-title')?.textContent}"`);
-            });
-            
-            const isInSync = recipes.length === cards.length;
-            console.log('\n✅ Arrays in sync:', isInSync);
-            
-            if (!isInSync) {
-                console.log('❌ ISSUE: Local array and DOM are out of sync!');
-                console.log('This means recipes were rendered but not stored in the local array.');
-            }
-            
-            console.log('=== END DEBUG ===');
-        }
-
-        // Test function to manually trigger recipe loading
-        async function testRecipeLoading() {
-            if (!currentPassword) {
-                console.log('❌ Please login with a password first');
-                return;
-            }
-            
-            console.log('🔄 Testing recipe loading...');
-            
-            try {
-                const beforeCount = recipes.length;
-                console.log('Recipes before reload:', beforeCount);
-                
-                await loadRecipes();
-                
-                const afterCount = recipes.length;
-                console.log('Recipes after reload:', afterCount);
-                
-                if (afterCount === beforeCount) {
-                    console.log('✅ Recipe count unchanged (expected if no new recipes)');
-                } else {
-                    console.log(`✅ Recipe count changed: ${beforeCount} -> ${afterCount}`);
-                }
-                
-                debugRecipeLoading();
-                
-            } catch (error) {
-                console.error('❌ Test failed:', error);
-            }
-        }
-
         // Open create recipe modal
         function openCreateModal() {
             if (createRecipeModal) {
@@ -5343,22 +4914,6 @@
             openShoppingListModal();
             
             showMessage(isAddingMoreRecipes ? 'Recipes added to shopping list!' : 'Shopping list generated!', 'success');
-        }
-
-        function debugShoppingList() {
-            console.log('=== SHOPPING LIST DEBUG ===');
-            console.log('Current shoppingListItems:', shoppingListItems);
-            console.log('localStorage content:', localStorage.getItem('shoppingList'));
-            
-            if (localStorage.getItem('shoppingList')) {
-                try {
-                    const parsed = JSON.parse(localStorage.getItem('shoppingList'));
-                    console.log('Parsed localStorage:', parsed);
-                } catch (e) {
-                    console.error('Error parsing localStorage:', e);
-                }
-            }
-            console.log('=== END DEBUG ===');
         }
 
         // Scale ingredient by quantity (basic implementation)
