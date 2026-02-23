@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNAPSE - Trading Strategy Tester</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://kit.fontawesome.com/cd7909d44e.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+
+    <!-- NAV -->
+    <div id="header" style="min-height: 15vh; background-image: none; background-color: #000000;">
+        <div class="container">
+            <nav>
+                <img src="images/logo.png" class="logo">
+                <ul id="sidemenu">
+                    <li><a href="index.html#header">Home</a></li>
+                    <li><a href="index.html#about">About</a></li>
+                    <li><a href="index.html#services">Services</a></li>
+                    <li><a href="index.html#portfolio">Portfolio</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                    <li><a href="recipes.html">Recipes</a></li>
+                    <li><a href="synapse.html">SYNAPSE</a></li>
+                    <i class="fas fa-times" onclick="closemenu()"></i>
+                </ul>
+                <i class="fas fa-bars" onclick="openmenu()"></i>
+            </nav>
+            <div class="header-text">
+                <h1><span class="highlight">SYNAPSE</span> Trading Tester</h1>
+                <p>Multi-layer decision engine for real-time and backtested trade signals.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div style="padding: 50px 0 80px; background: #0f1e2d;">
+        <div class="container">
+
+            <h1 class="sub-title">Configuration</h1>
+            <p style="color: rgba(255,255,255,0.5); margin-top: 10px; margin-bottom: 40px; font-size: 15px;">
+                Set your data parameters below, then select a timestamp to evaluate the trade decision at that point.
+            </p>
+
+            <!-- CONFIG GRID -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+
+                <!-- COLUMN 1: Credentials & Symbol -->
+                <div style="background: #102A43; border-radius: 14px; padding: 24px; border: 1px solid rgba(0,213,255,0.1);">
+                    <div style="font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary-color); margin-bottom: 18px;">
+                        <i class="fas fa-key"></i>&nbsp; Credentials & Symbol
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="display:block; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:6px;">Alpaca API Key</label>
+                        <input type="password" id="api-key" placeholder="Enter API key…"
+                            style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(0,213,255,0.2); border-radius:8px; padding:10px 14px; color:white; font-size:14px; font-family:'Poppins',sans-serif; outline:none; box-sizing:border-box;">
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="display:block; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:6px;">Alpaca Secret Key</label>
+                        <input type="password" id="secret-key" placeholder="Enter secret key…"
+                            style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(0,213,255,0.2); border-radius:8px; padding:10px 14px; color:white; font-size:14px; font-family:'Poppins',sans-serif; outline:none; box-sizing:border-box;">
+                    </div>
+
+                    <div>
+                        <label style="display:block; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:6px;">Symbol</label>
+                        <input type="text" id="symbol" value="SPY" placeholder="e.g. SPY, AAPL"
+                            style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(0,213,255,0.2); border-radius:8px; padding:10px 14px; color:white; font-size:14px; font-family:'Poppins',sans-serif; outline:none; box-sizing:border-box; text-transform:uppercase;">
+                    </div>
+                </div>
+
+                <!-- COLUMN 2: Timeframe & Data Range -->
+                <div style="background: #102A43; border-radius: 14px; padding: 24px; border: 1px solid rgba(0,213,255,0.1);">
+                    <div style="font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary-color); margin-bottom: 18px;">
+                        <i class="fas fa-clock"></i>&nbsp; Timeframe & Range
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="display:block; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:6px;">Timeframe</label>
+                        <select id="timeframe"
+                            style="width:100%; background:#0f1e2d; border:1px solid rgba(0,213,255,0.2); border-radius:8px; padding:10px 14px; color:white; font-size:14px; font-family:'Poppins',sans-serif; outline:none; box-sizing:border-box;">
+                            <optgroup label="Minutes" style="color:rgba(255,255,255,0.4);">
+                                <option value="1Min">1 Minute</option>
+                                <option value="2Min">2 Minutes</option>
+                                <option value="3Min">3 Minutes</option>
+                                <option value="5Min">5 Minutes</option>
+                                <option value="10Min">10 Minutes</option>
+                                <option value="15Min">15 Minutes</option>
+                                <option value="30Min">30 Minutes</option>
+                            </optgroup>
+                            <optgroup label="Hours" style="color:rgba(255,255,255,0.4);">
+                                <option value="1Hour">1 Hour</option>
+                                <option value="2Hour">2 Hours</option>
+                                <option value="4Hour">4 Hours</option>
+                            </optgroup>
+                            <optgroup label="Higher" style="color:rgba(255,255,255,0.4);">
+                                <option value="1Day">1 Day</option>
+                                <option value="1Week">1 Week</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <!-- Range mode toggle -->
+                    <div style="margin-bottom: 14px;">
+                        <label style="display:block; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:8px;">Data Range Mode</label>
+                        <div style="display:flex; background:rgba(0,0,0,0.3); border-radius:8px; padding:4px; gap:4px;">
+                            <button class="range-mode-btn active" id="btn-lookback" onclick="setRangeMode('lookback', this)"
+                                style="flex:1; padding:8px; border:none; border-radius:6px; background:var(--primary-color); color:#080808; font-size:13px; font-family:'Poppins',sans-serif; font-weight:600; cursor:pointer;">
+                                Last N Candles
+                            </button>
+                            <button class="range-mode-btn" id="btn-daterange" onclick="setRangeMode('daterange', this)"
+                                style="flex:1; padding:8px; border:none; border-radius:6px; background:transparent; color:rgba(255,255,255,0.5); font-size:13px; font-family:'Poppins',sans-serif; font-weight:500; cursor:pointer;">
+                                Date Range
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Last N candles -->
+                    <div id="lookback-inputs">
+                        <label style="display:block; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:6px;">Number of Candles</label>
+                        <input type="number" id="lookback" value="500" min="100" max="5000"
+                            style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(0,213,255,0.2); border-radius:8px; padding:10px 14px; color:white; font-size:14px; font-family:'Poppins',sans-serif; outline:none; box-sizing:border-box;">
+                        <p style="font-size:11px; color:rgba(255,255,255,0.3); margin-top:6px;">Minimum 100 candles required for indicator warmup.</p>
+                    </div>
+
+                    <!-- Date range -->
+                    <div id="daterange-inputs" style="display:none;">
+                        <div style="margin-bottom:12px;">
+                            <label style="display:block; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:6px;">Start Date & Time</label>
+                            <input type="datetime-local" id="start-datetime"
+                                style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(0,213,255,0.2); border-radius:8px; padding:10px 14px; color:white; font-size:14px; font-family:'Poppins',sans-serif; outline:none; box-sizing:border-box; color-scheme:dark;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:6px;">End Date & Time</label>
+                            <input type="datetime-local" id="end-datetime"
+                                style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(0,213,255,0.2); border-radius:8px; padding:10px 14px; color:white; font-size:14px; font-family:'Poppins',sans-serif; outline:none; box-sizing:border-box; color-scheme:dark;">
+                        </div>
+                        <p style="font-size:11px; color:rgba(255,255,255,0.3); margin-top:6px;">Range must span at least 100 candles for the selected timeframe.</p>
+                    </div>
+                </div>
+
+                <!-- COLUMN 3: Timestamp Selection -->
+                <div style="background: #102A43; border-radius: 14px; padding: 24px; border: 1px solid rgba(0,213,255,0.1);">
+                    <div style="font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary-color); margin-bottom: 18px;">
+                        <i class="fas fa-crosshairs"></i>&nbsp; Decision Timestamp
+                    </div>
+
+                    <p style="font-size:13px; color:rgba(255,255,255,0.5); margin-bottom:16px; line-height:1.6;">
+                        Choose which candle to evaluate the trade decision at. You can type a specific datetime or select a candle from the chart after data loads.
+                    </p>
+
+                    <!-- Timestamp mode toggle -->
+                    <div style="margin-bottom: 14px;">
+                        <div style="display:flex; background:rgba(0,0,0,0.3); border-radius:8px; padding:4px; gap:4px;">
+                            <button class="ts-mode-btn active" id="btn-ts-latest" onclick="setTimestampMode('latest', this)"
+                                style="flex:1; padding:8px; border:none; border-radius:6px; background:var(--primary-color); color:#080808; font-size:12px; font-family:'Poppins',sans-serif; font-weight:600; cursor:pointer;">
+                                Latest Candle
+                            </button>
+                            <button class="ts-mode-btn" id="btn-ts-manual" onclick="setTimestampMode('manual', this)"
+                                style="flex:1; padding:8px; border:none; border-radius:6px; background:transparent; color:rgba(255,255,255,0.5); font-size:12px; font-family:'Poppins',sans-serif; font-weight:500; cursor:pointer;">
+                                Manual Entry
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Manual timestamp input -->
+                    <div id="manual-ts-input" style="display:none; margin-bottom:14px;">
+                        <label style="display:block; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:6px;">Timestamp</label>
+                        <input type="datetime-local" id="decision-timestamp"
+                            style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(0,213,255,0.2); border-radius:8px; padding:10px 14px; color:white; font-size:14px; font-family:'Poppins',sans-serif; outline:none; box-sizing:border-box; color-scheme:dark;">
+                        <p style="font-size:11px; color:rgba(255,255,255,0.3); margin-top:6px;">Must be within your selected data range and have at least 100 candles before it.</p>
+                    </div>
+
+                    <!-- Latest candle info -->
+                    <div id="latest-ts-info" style="background:rgba(0,213,255,0.05); border:1px solid rgba(0,213,255,0.15); border-radius:8px; padding:12px;">
+                        <p style="font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:4px;">Will evaluate at:</p>
+                        <p style="font-size:14px; font-weight:600; color:var(--primary-color);">Last candle in dataset</p>
+                        <p style="font-size:11px; color:rgba(255,255,255,0.3); margin-top:4px;">Timestamp shown after data loads.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- VALIDATION WARNING -->
+            <div id="validation-warning" style="display:none; margin-top:20px; background:rgba(244,67,54,0.08); border:1px solid rgba(244,67,54,0.3); border-radius:10px; padding:16px 20px;">
+                <p style="color:#EF9A9A; font-size:14px;"><i class="fas fa-exclamation-triangle" style="margin-right:8px;"></i><span id="warning-text"></span></p>
+            </div>
+
+            <!-- RUN BUTTON -->
+            <div style="margin-top: 30px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+                <button onclick="runAnalysis()" id="run-btn"
+                    style="padding:14px 48px; background:linear-gradient(135deg, var(--primary-color), #0099bb); border:none; border-radius:10px; color:#080808; font-size:15px; font-weight:700; font-family:'Poppins',sans-serif; cursor:pointer; letter-spacing:1px; text-transform:uppercase; transition: all 0.3s ease;">
+                    <i class="fas fa-bolt"></i>&nbsp; Run Analysis
+                </button>
+                <p style="font-size:12px; color:rgba(255,255,255,0.25); max-width:400px; line-height:1.6;">
+                    API keys are only used to fetch data from Alpaca and are never stored or logged.
+                </p>
+            </div>
+
+            <!-- OUTPUT AREA -->
+            <div id="output-area" style="margin-top: 50px; display:none;">
+
+                <!-- Status bar above chart -->
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <span id="chart-symbol" style="font-size:20px; font-weight:700; color:white;"></span>
+                        <span id="chart-candle-count" style="font-size:13px; color:rgba(255,255,255,0.4); margin-left:12px;"></span>
+                    </div>
+                    <div style="font-size:13px; color:rgba(255,255,255,0.4);">
+                        Decision candle: <span id="chart-decision-ts" style="color:var(--primary-color); font-weight:600;"></span>
+                    </div>
+                </div>
+
+                <!-- Chart container -->
+                <div id="plotly-chart" style="width:100%; border-radius:12px; overflow:hidden; border:1px solid rgba(0,213,255,0.1);"></div>
+
+            </div>
+
+            <!-- DECISION SECTION -->
+            <div id="decision-section" style="display:none; margin-top:40px;">
+
+                <!-- Overall verdict banner -->
+                <div id="verdict-banner" style="
+                    padding: 20px 28px;
+                    border-radius: 14px;
+                    margin-bottom: 30px;
+                    display: flex;
+                    align-items: center;
+                    gap: 20px;
+                    flex-wrap: wrap;
+                ">
+                    <div style="font-size: 40px;" id="verdict-emoji"></div>
+                    <div>
+                        <div style="font-size: 11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.5); margin-bottom:4px;">Final Decision</div>
+                        <div style="font-size: 28px; font-weight: 800;" id="verdict-title"></div>
+                        <div style="font-size: 14px; color:rgba(255,255,255,0.6); margin-top:4px;" id="verdict-reason"></div>
+                    </div>
+                    <div style="margin-left:auto; text-align:right;" id="verdict-risk"></div>
+                </div>
+
+                <!-- Layer cards grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px;" id="layer-cards"></div>
+
+            </div>
+
+            <!-- Loading overlay -->
+            <div id="loading-overlay" style="display:none; text-align:center; padding:40px 0;">
+                <div style="display:inline-block; width:36px; height:36px; border:3px solid rgba(0,213,255,0.2); border-top-color:var(--primary-color); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+                <p style="color:rgba(255,255,255,0.5); margin-top:14px; font-size:14px;" id="loading-msg">Fetching data…</p>
+            </div>
+
+            <style>
+            @keyframes spin { to { transform: rotate(360deg); } }
+            </style>
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="copyright">
+        <p>Copyright &copy; Steven Manz. Made with <i class="fas fa-heart"></i></p>
+    </div>
+
+    <script>
+    // ---- NAV ----
+    var sidemeu = document.getElementById("sidemenu");
+    function openmenu() { sidemeu.style.right = "0"; }
+    function closemenu() { sidemeu.style.right = "-200px"; }
+
+    // ---- STATE ----
+    let rangeMode      = 'lookback';
+    let timestampMode  = 'latest';
+    let sessionId      = null;
+    let currentDecisionIdx = null;
+
+    // ---- RANGE MODE ----
+    function setRangeMode(mode, btn) {
+        rangeMode = mode;
+        document.getElementById('lookback-inputs').style.display   = mode === 'lookback'   ? 'block' : 'none';
+        document.getElementById('daterange-inputs').style.display  = mode === 'daterange'  ? 'block' : 'none';
+        document.querySelectorAll('.range-mode-btn').forEach(b => {
+            b.style.background  = 'transparent';
+            b.style.color       = 'rgba(255,255,255,0.5)';
+            b.style.fontWeight  = '500';
+        });
+        btn.style.background = 'var(--primary-color)';
+        btn.style.color      = '#080808';
+        btn.style.fontWeight = '600';
+    }
+
+    // ---- TIMESTAMP MODE ----
+    function setTimestampMode(mode, btn) {
+        timestampMode = mode;
+        document.getElementById('manual-ts-input').style.display  = mode === 'manual' ? 'block' : 'none';
+        document.getElementById('latest-ts-info').style.display   = mode === 'latest' ? 'block' : 'none';
+        document.querySelectorAll('.ts-mode-btn').forEach(b => {
+            b.style.background  = 'transparent';
+            b.style.color       = 'rgba(255,255,255,0.5)';
+            b.style.fontWeight  = '500';
+        });
+        btn.style.background = 'var(--primary-color)';
+        btn.style.color      = '#080808';
+        btn.style.fontWeight = '600';
+    }
+
+    // ---- VALIDATION ----
+    function validate() {
+        const warn     = document.getElementById('validation-warning');
+        const warnText = document.getElementById('warning-text');
+        const apiKey   = document.getElementById('api-key').value.trim();
+        const secretKey= document.getElementById('secret-key').value.trim();
+        const symbol   = document.getElementById('symbol').value.trim();
+
+        if (!apiKey || !secretKey) {
+            warnText.textContent = 'Please enter your Alpaca API Key and Secret Key.';
+            warn.style.display = 'block'; return false;
+        }
+        if (!symbol) {
+            warnText.textContent = 'Please enter a stock symbol (e.g. SPY).';
+            warn.style.display = 'block'; return false;
+        }
+        if (rangeMode === 'daterange') {
+            const start = document.getElementById('start-datetime').value;
+            const end   = document.getElementById('end-datetime').value;
+            if (!start || !end) {
+                warnText.textContent = 'Please enter both a start and end date/time.';
+                warn.style.display = 'block'; return false;
+            }
+            if (new Date(start) >= new Date(end)) {
+                warnText.textContent = 'Start date must be before end date.';
+                warn.style.display = 'block'; return false;
+            }
+        }
+        if (timestampMode === 'manual') {
+            const ts = document.getElementById('decision-timestamp').value;
+            if (!ts) {
+                warnText.textContent = 'Please enter a decision timestamp or switch to Latest Candle.';
+                warn.style.display = 'block'; return false;
+            }
+        }
+        warn.style.display = 'none';
+        return true;
+    }
+
+    // ---- MAIN RUN (heavy) ----
+    async function runAnalysis() {
+        if (!validate()) return;
+
+        const btn     = document.getElementById('run-btn');
+        const overlay = document.getElementById('loading-overlay');
+        const outputArea = document.getElementById('output-area');
+        const decisionSection = document.getElementById('decision-section');
+
+        btn.disabled      = true;
+        btn.style.opacity = '0.6';
+        overlay.style.display    = 'block';
+        outputArea.style.display = 'none';
+        decisionSection.style.display = 'none';
+        document.getElementById('loading-msg').textContent = 'Fetching data from Alpaca…';
+
+        const config = {
+            api_key:            document.getElementById('api-key').value.trim(),
+            secret_key:         document.getElementById('secret-key').value.trim(),
+            symbol:             document.getElementById('symbol').value.trim().toUpperCase(),
+            timeframe:          document.getElementById('timeframe').value,
+            range_mode:         rangeMode,
+            lookback:           parseInt(document.getElementById('lookback').value) || 500,
+            start_datetime:     rangeMode === 'daterange' ? document.getElementById('start-datetime').value : null,
+            end_datetime:       rangeMode === 'daterange' ? document.getElementById('end-datetime').value : null,
+            timestamp_mode:     timestampMode,
+            decision_timestamp: timestampMode === 'manual' ? document.getElementById('decision-timestamp').value : null
+        };
+
+        try {
+            const response = await fetch('http://localhost:5000/api/chart', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(config)
+            });
+            const data = await response.json();
+
+            if (data.status !== 'success') {
+                showWarning(data.message);
+                return;
+            }
+
+            // Store session state
+            sessionId          = data.session_id;
+            currentDecisionIdx = data.decision_idx;
+
+            // Info bar
+            document.getElementById('chart-symbol').textContent        = data.symbol;
+            document.getElementById('chart-candle-count').textContent  = `${data.candle_count} candles`;
+            document.getElementById('chart-decision-ts').textContent   = data.decision_timestamp;
+
+            // Render chart
+            document.getElementById('loading-msg').textContent = 'Rendering chart…';
+            const chartEl = document.getElementById('plotly-chart');
+
+            await Plotly.newPlot(chartEl, data.figure.data, data.figure.layout, {
+                responsive:  true,
+                scrollZoom:  true,
+                displaylogo: false,
+                modeBarButtonsToRemove: ['select2d', 'lasso2d', 'autoScale2d'],
+            });
+
+            // ---- CLICK HANDLER — update decision candle ----
+            chartEl.on('plotly_click', async (eventData) => {
+                if (!eventData.points || eventData.points.length === 0) return;
+
+                // Get the clicked candle index from the x category position
+                const clickedIdx = eventData.points[0].pointIndex;
+                if (clickedIdx === currentDecisionIdx) return; // same candle, skip
+
+                await updateDecision(clickedIdx);
+            });
+
+            outputArea.style.display = 'block';
+            renderDecision(data.decision, data.decision_timestamp);
+
+        } catch (err) {
+            showWarning('Could not reach backend. Is app.py running? — ' + err.message);
+        } finally {
+            btn.disabled      = false;
+            btn.style.opacity = '1';
+            overlay.style.display = 'none';
+        }
+    }
+
+    // ---- LIGHTWEIGHT DECISION UPDATE (on click) ----
+    async function updateDecision(newIdx) {
+        if (!sessionId) return;
+
+        // Visual feedback — pulse the decision timestamp label
+        const tsLabel = document.getElementById('chart-decision-ts');
+        tsLabel.style.opacity = '0.4';
+
+        try {
+            const response = await fetch('http://localhost:5000/api/decision', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({
+                    session_id:   sessionId,
+                    decision_idx: newIdx
+                })
+            });
+            const data = await response.json();
+
+            if (data.status !== 'success') {
+                showWarning(data.message);
+                return;
+            }
+
+            currentDecisionIdx = data.decision_idx;
+
+            // Move the vertical decision line on the chart
+            _updateDecisionLine(newIdx);
+
+            // Update timestamp label
+            tsLabel.textContent = data.decision_timestamp;
+            tsLabel.style.opacity = '1';
+
+            // Re-render decision cards
+            renderDecision(data.decision, data.decision_timestamp);
+
+        } catch (err) {
+            showWarning('Decision update failed: ' + err.message);
+            tsLabel.style.opacity = '1';
+        }
+    }
+
+    // ---- MOVE VERTICAL LINE ON CHART ----
+    function _updateDecisionLine(newIdx) {
+        const chartEl = document.getElementById('plotly-chart');
+        if (!chartEl || !chartEl.layout) return;
+
+        // Find the decision line shape and annotation by their properties
+        // and replace them with updated positions
+        const shapes = (chartEl.layout.shapes || []).map(s => {
+            // Decision line is the dashed white vertical line
+            if (s.line && s.line.dash === 'dash' &&
+                s.line.color === 'rgba(255,255,255,0.5)') {
+                return { ...s, x0: newIdx, x1: newIdx };
+            }
+            return s;
+        });
+
+        const annotations = (chartEl.layout.annotations || []).map(a => {
+            if (a.text === 'Decision') {
+                return { ...a, x: newIdx };
+            }
+            return a;
+        });
+
+        Plotly.relayout(chartEl, { shapes, annotations });
+    }
+
+    // ---- RENDER DECISION CARDS ----
+    function renderDecision(decision, decisionTimestamp) {
+        const section = document.getElementById('decision-section');
+        section.style.display = 'block';
+
+        const isTrade = decision.decision === 'TRADE';
+        const isLong  = decision.direction === 'LONG';
+
+        let bannerColor, emoji, titleText, titleColor;
+        if (isTrade && isLong) {
+            bannerColor = 'rgba(38,166,154,0.12)';
+            titleColor  = '#26a69a';
+            emoji       = '📈';
+            titleText   = 'LONG';
+        } else if (isTrade && !isLong) {
+            bannerColor = 'rgba(239,83,80,0.12)';
+            titleColor  = '#ef5350';
+            emoji       = '📉';
+            titleText   = 'SHORT';
+        } else {
+            bannerColor = 'rgba(255,255,255,0.04)';
+            titleColor  = 'rgba(255,255,255,0.5)';
+            emoji       = '⏸️';
+            titleText   = 'NO TRADE';
+        }
+
+        const banner = document.getElementById('verdict-banner');
+        banner.style.background = bannerColor;
+        banner.style.border     = `1px solid ${titleColor}40`;
+        document.getElementById('verdict-emoji').textContent = emoji;
+        document.getElementById('verdict-title').textContent = titleText;
+        document.getElementById('verdict-title').style.color = titleColor;
+        document.getElementById('verdict-reason').textContent = decision.reason;
+
+        // Risk params
+        const riskDiv = document.getElementById('verdict-risk');
+        if (isTrade && decision.stop_loss) {
+            riskDiv.innerHTML = `
+                <div style="font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:6px; letter-spacing:1px; text-transform:uppercase;">Risk Parameters</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 20px; font-size:13px;">
+                    <div><span style="color:rgba(255,255,255,0.4);">Entry</span><br><b style="color:white">$${decision.close.toFixed(2)}</b></div>
+                    <div><span style="color:rgba(255,255,255,0.4);">Stop Loss</span><br><b style="color:#ef5350">$${decision.stop_loss.toFixed(2)}</b></div>
+                    <div><span style="color:rgba(255,255,255,0.4);">PE1 (50%)</span><br><b style="color:#FF9800">$${decision.partial_exit_1.toFixed(2)}</b></div>
+                    <div><span style="color:rgba(255,255,255,0.4);">PE2 (25%)</span><br><b style="color:#FF9800">$${decision.partial_exit_2.toFixed(2)}</b></div>
+                    <div><span style="color:rgba(255,255,255,0.4);">Target (25%)</span><br><b style="color:#26a69a">$${decision.take_profit.toFixed(2)}</b></div>
+                    <div><span style="color:rgba(255,255,255,0.4);">R:R</span><br><b style="color:#00d5ff">${decision.risk_reward_ratio.toFixed(2)}:1</b></div>
+                </div>
+            `;
+        } else {
+            riskDiv.innerHTML = '';
+        }
+
+        // Layer cards
+        const container = document.getElementById('layer-cards');
+        container.innerHTML = '';
+        if (!decision.layers || decision.layers.length === 0) return;
+
+        decision.layers.forEach(layer => {
+            const fired     = layer.result === 'TRADE';
+            const isL       = layer.direction === 'LONG';
+            const badgeColor= fired ? (isL ? '#26a69a' : '#ef5350') : 'rgba(255,255,255,0.2)';
+            const badgeBg   = fired ? (isL ? 'rgba(38,166,154,0.15)' : 'rgba(239,83,80,0.15)') : 'rgba(255,255,255,0.05)';
+            const badgeText = fired ? layer.direction : 'NO SIGNAL';
+
+            const indRows = Object.entries(layer.indicators).map(([k, v]) => `
+                <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+                    <span style="color:rgba(255,255,255,0.45); font-size:12px;">${k}</span>
+                    <span style="color:white; font-size:12px; font-weight:600;">${v}</span>
+                </div>
+            `).join('');
+
+            const card = document.createElement('div');
+            card.style.cssText = `
+                background: #102A43;
+                border-radius: 14px;
+                padding: 22px;
+                border: 1px solid ${fired ? badgeColor + '40' : 'rgba(255,255,255,0.06)'};
+            `;
+            card.innerHTML = `
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                    <div>
+                        <div style="font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:rgba(0,213,255,0.7); margin-bottom:4px;">Layer ${layer.layer}</div>
+                        <div style="font-size:16px; font-weight:700; color:white;">${layer.name}</div>
+                    </div>
+                    <div style="padding:6px 14px; border-radius:20px; background:${badgeBg}; border:1px solid ${badgeColor}; color:${badgeColor}; font-size:12px; font-weight:700; letter-spacing:1px;">${badgeText}</div>
+                </div>
+                <div style="font-size:12px; color:rgba(255,255,255,0.5); margin-bottom:14px; font-style:italic;">${layer.reason}</div>
+                <div style="margin-bottom:14px;">${indRows}</div>
+                <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:12px; font-size:11px; line-height:1.8;">
+                    <div style="margin-bottom:6px;"><span style="color:#26a69a; font-weight:700;">▲ LONG: </span><span style="color:rgba(255,255,255,0.55);">${layer.long_condition}</span></div>
+                    <div><span style="color:#ef5350; font-weight:700;">▼ SHORT: </span><span style="color:rgba(255,255,255,0.55);">${layer.short_condition}</span></div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function showWarning(msg) {
+        const warn = document.getElementById('validation-warning');
+        document.getElementById('warning-text').textContent = msg;
+        warn.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
