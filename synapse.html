@@ -444,7 +444,7 @@
         tsLabel.style.opacity = '0.4';
 
         try {
-            const response = await fetch('http://localhost:5000/api/decision', {
+            const response = await fetch('${API_BASE}/api/decision', {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({
