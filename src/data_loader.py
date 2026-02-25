@@ -35,10 +35,11 @@ class DataLoader:
         candles_back is used as minutes to go back, identical to original.
         """
         end_date   = datetime.now()
-        start_date = end_date - timedelta(minutes=config.lookback)
+        start_date = end_date - timedelta(minutes=config.minutes_lookback)
 
         logger.info(f"Fetching {config.symbol} [{config.timeframe_str}] "
-                    f"from {start_date} to {end_date}")
+                    f"from {start_date} to {end_date} "
+                    f"({config.candles} candles requested)")
 
         return self._request(config.symbol, config.timeframe, start_date, end_date)
 

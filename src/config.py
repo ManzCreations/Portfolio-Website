@@ -131,7 +131,7 @@ class Config:
             return False, f'Invalid timeframe: {self.timeframe_str}'
 
         if self.range_mode == 'lookback':
-            if self.candles < self.min_warmup_candles:   # ← was self.lookback
+            if self.candles < self.min_warmup_candles:
                 return False, f'Lookback must be at least {self.min_warmup_candles} candles.'
 
         elif self.range_mode == 'daterange':
