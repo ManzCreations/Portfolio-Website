@@ -675,16 +675,15 @@
 
     <!-- Game info block -->
     <div class="tb-divider"></div>
-    <div id="topbarGameInfo" style="display:flex;flex-direction:column;line-height:1.15;flex-shrink:0;">
+    <div id="topbarGameInfo" style="display:flex;flex-direction:column;line-height:1.2;flex-shrink:0;gap:1px;">
         <span id="todayDate" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;"></span>
         <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#fff;">vs <span id="opponentName" style="color:var(--primary);">—</span></span>
+        <span id="gameChipField" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--secondary);">
+            <i class="fas fa-map-marker-alt" style="font-size:8px;margin-right:3px;"></i><span id="chipFieldName">—</span>
+        </span>
     </div>
 
-    <!-- Game detail chips (hidden on medium/narrow) -->
-    <div id="gameChipField" class="game-chip field" style="display:none;">
-        <i class="fas fa-map-marker-alt" style="font-size:9px;"></i>
-        <span id="chipFieldName">—</span>
-    </div>
+    <!-- Location + Time chips (horizontal, hidden on medium/narrow) -->
     <div id="gameChipLocation" class="game-chip home" style="display:none;">
         <i class="fas fa-circle" style="font-size:7px;"></i>
         <span id="chipLocation">—</span>
@@ -1910,12 +1909,12 @@ function initSchedule(){
     // Opponent
     document.getElementById('opponentName').textContent = next ? next.opponent : 'No upcoming games';
 
-    // Field chip
+    // Field (stacked inside game info block)
     const fieldChip = document.getElementById('gameChipField');
     const fieldName = document.getElementById('chipFieldName');
     if(next && next.field){
         fieldName.textContent = next.field;
-        fieldChip.style.display = 'flex';
+        fieldChip.style.display = 'block';
     } else {
         fieldChip.style.display = 'none';
     }
