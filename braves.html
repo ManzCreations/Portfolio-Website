@@ -1,0 +1,1989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lineup Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/cd7909d44e.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --primary:    #00d5ff;
+            --secondary:  #64bfd1;
+            --bg:         #080808;
+            --panel:      rgba(8,16,24,0.92);
+            --border:     rgba(0,213,255,0.18);
+            --starter:    #22c55e;
+            --backup:     #3b82f6;
+            --ifnec:      #f59e0b;
+            --parttime:   #ef4444;
+            --text:       #fff;
+            --muted:      rgba(255,255,255,0.45);
+            --grass:      #2d5a1b;
+            --dirt:       #c4843a;
+            --infield:    #b8722e;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family: 'Barlow', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* ── TOP BAR ── */
+        :root { --topbar-h: 52px; }
+
+        #topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: var(--topbar-h);
+            background: rgba(4,10,18,0.97);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 8px;
+            z-index: 200;
+            backdrop-filter: blur(12px);
+            overflow: visible;
+        }
+        #topbar .brand {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 20px;
+            letter-spacing: 2px;
+            color: var(--primary);
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+        #topbar .brand span { color: #fff; }
+        .tb-divider { width:1px; height:28px; background:var(--border); flex-shrink:0; }
+        .tb-label {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:11px; letter-spacing:1px;
+            color:var(--muted); text-transform:uppercase; flex-shrink:0;
+        }
+
+        #inningSelect {
+            background: rgba(0,213,255,0.07);
+            border: 1px solid var(--border);
+            color: var(--primary);
+            font-family: 'Barlow Condensed',sans-serif;
+            font-weight:700; font-size:15px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            outline: none;
+            flex-shrink: 0;
+        }
+        #inningSelect option { background:#0a1520; color:#fff; }
+
+        .tb-btn {
+            background: rgba(0,213,255,0.08);
+            border: 1px solid var(--border);
+            color: var(--primary);
+            font-family:'Barlow Condensed',sans-serif;
+            font-weight:700; font-size:12px; letter-spacing:1px;
+            padding: 4px 11px; border-radius:6px;
+            cursor:pointer; transition: all .2s;
+            display:flex; align-items:center; gap:5px;
+            flex-shrink:0; white-space:nowrap;
+        }
+        .tb-btn:hover { background:rgba(0,213,255,0.18); border-color:var(--primary); }
+        .tb-btn:disabled { opacity:.35; cursor:not-allowed; }
+        .tb-btn.accent {
+            background: var(--primary); color:#000;
+            border-color:var(--primary);
+        }
+        .tb-btn.accent:hover { background:var(--secondary); }
+
+        .tb-spacer { flex:1; min-width:0; }
+
+        #availBtn {
+            background: rgba(34,197,94,0.1);
+            border-color: rgba(34,197,94,0.3);
+            color: #22c55e;
+        }
+        #availBtn:hover { background:rgba(34,197,94,0.2); border-color:#22c55e; }
+
+        /* ── HAMBURGER MENU BUTTON ── */
+        #menuBtn {
+            display: none;
+            background: rgba(0,213,255,0.08);
+            border: 1px solid var(--border);
+            color: var(--primary);
+            font-size: 16px;
+            width: 34px; height: 34px;
+            border-radius: 6px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        #menuBtn:hover { background:rgba(0,213,255,0.18); border-color:var(--primary); }
+
+        /* ── OVERFLOW DROPDOWN MENU ── */
+        #overflowMenu {
+            display: none;
+            position: fixed;
+            top: var(--topbar-h);
+            right: 0;
+            background: rgba(4,10,20,0.98);
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 8px;
+            z-index: 300;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 180px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+        }
+        #overflowMenu.open { display: flex; }
+        #overflowMenu .tb-btn {
+            width: 100%;
+            justify-content: flex-start;
+            padding: 8px 14px;
+            font-size: 13px;
+        }
+        #overflowMenu .menu-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 2px 0;
+        }
+        #overflowMenu .menu-label {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:10px; letter-spacing:2px;
+            color:var(--muted); text-transform:uppercase;
+            padding: 4px 14px 2px;
+        }
+
+        /* ── RESPONSIVE BREAKPOINTS ── */
+
+        /* Medium screens: hide text labels on some buttons */
+        @media (max-width: 780px) {
+            .tb-hide-md { display: none !important; }
+            #topbar { gap: 6px; }
+        }
+
+        /* Narrow screens: collapse secondary buttons into hamburger */
+        @media (max-width: 560px) {
+            #menuBtn { display: flex; }
+            .tb-overflow { display: none !important; }
+            .tb-divider.tb-overflow { display: none !important; }
+            #topbar { gap: 5px; padding: 0 10px; }
+            #topbar .brand { font-size: 17px; }
+        }
+
+        /* Very narrow: hide date/opponent too */
+        @media (max-width: 380px) {
+            #topbarGameInfo { display: none !important; }
+            .tb-divider:first-of-type { display: none !important; }
+        }
+
+        /* ── MAIN LAYOUT ── */
+        #main {
+            display: flex;
+            height: calc(100vh - var(--topbar-h));
+            margin-top: var(--topbar-h);
+        }
+
+        /* ── FIELD ── */
+        #fieldWrap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #fieldSvg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ── PLAYER BUBBLES OVERLAY ── */
+        #bubblesLayer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .bubble {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: all;
+            cursor: grab;
+            transition: filter .15s;
+            z-index: 10;
+        }
+        .bubble:active { cursor: grabbing; }
+        .bubble:hover .bubble-card { filter: brightness(1.2); }
+
+        .bubble-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(4,12,22,0.92);
+            border-radius: 10px;
+            border: 2px solid var(--color, var(--primary));
+            padding: 5px 10px 4px;
+            min-width: 72px;
+            box-shadow: 0 0 16px rgba(0,0,0,0.7), 0 0 8px var(--color, transparent);
+            position: relative;
+        }
+        .bubble-num {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:10px; font-weight:700;
+            color: var(--color, var(--primary));
+            letter-spacing:1px;
+            line-height:1;
+        }
+        .bubble-name {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:13px; font-weight:700;
+            color:#fff; line-height:1.1;
+            white-space:nowrap;
+        }
+        .bubble-pos-tag {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:9px; letter-spacing:1px;
+            color:var(--muted);
+        }
+        .bubble-dot {
+            width: 8px; height: 8px;
+            border-radius:50%;
+            background: var(--color, var(--primary));
+            box-shadow: 0 0 6px var(--color, var(--primary));
+            margin-top: 3px;
+        }
+        .bubble.dragging { opacity:.7; z-index:999; transition:none; }
+        .bubble.empty-slot .bubble-card {
+            border-style: dashed;
+            opacity:.45;
+            background: rgba(4,12,22,0.5);
+        }
+
+        /* ── RIGHT PANEL ── */
+        #sidePanel {
+            width: 240px;
+            flex-shrink: 0;
+            background: var(--panel);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: width .3s, opacity .3s;
+            overflow: hidden;
+        }
+        #sidePanel.collapsed { width: 0; opacity:0; pointer-events:none; }
+
+        .panel-header {
+            padding: 12px 14px 10px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .panel-title {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:14px; font-weight:700; letter-spacing:2px;
+            text-transform:uppercase; color:var(--primary);
+        }
+        .panel-close {
+            background:none; border:none; color:var(--muted);
+            cursor:pointer; font-size:16px; line-height:1;
+            padding:2px 4px;
+        }
+        .panel-close:hover { color:#fff; }
+
+        .panel-legend {
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border);
+            display: flex; flex-direction:column; gap:4px;
+            flex-shrink:0;
+        }
+        .legend-row {
+            display:flex; align-items:center; gap:6px;
+            font-size:11px; color:var(--muted);
+        }
+        .legend-dot {
+            width:8px; height:8px; border-radius:50%;
+            flex-shrink:0;
+        }
+
+        .panel-list {
+            flex:1;
+            overflow-y: auto;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .panel-list::-webkit-scrollbar { width:4px; }
+        .panel-list::-webkit-scrollbar-track { background:transparent; }
+        .panel-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+        .player-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--color, var(--primary));
+            border-radius: 7px;
+            padding: 7px 10px;
+            cursor: grab;
+            transition: background .15s, transform .1s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .player-card:active { cursor:grabbing; }
+        .player-card:hover { background:rgba(255,255,255,0.09); transform:translateX(2px); }
+        .player-card.on-field { opacity:.35; cursor:default; }
+        .player-card.on-field:hover { transform:none; background:rgba(255,255,255,0.04); }
+
+        .pc-num {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:13px; font-weight:700;
+            color:var(--color, var(--primary));
+            min-width:22px; text-align:center;
+        }
+        .pc-info { flex:1; min-width:0; }
+        .pc-name {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:14px; font-weight:700; color:#fff;
+            white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+        }
+        .pc-pos {
+            font-size:10px; color:var(--muted);
+        }
+        .pc-info-btn {
+            background:none; border:none;
+            color:var(--muted); cursor:pointer;
+            font-size:12px; padding:2px;
+            flex-shrink:0;
+        }
+        .pc-info-btn:hover { color:var(--primary); }
+
+        /* ── TOGGLE PANEL BTN ── */
+        #togglePanel {
+            position:absolute;
+            right: 240px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            background: rgba(4,10,18,0.9);
+            border: 1px solid var(--border);
+            border-right:none;
+            color:var(--primary);
+            padding:8px 4px;
+            cursor:pointer;
+            border-radius:6px 0 0 6px;
+            font-size:12px;
+            transition: right .3s;
+        }
+        #togglePanel.collapsed { right:0; border-radius:6px 0 0 6px; }
+
+        /* ── MODAL ── */
+        #modalOverlay {
+            position:fixed; inset:0;
+            background:rgba(0,0,0,0.75);
+            z-index:500;
+            display:none;
+            align-items:center;
+            justify-content:center;
+            backdrop-filter:blur(4px);
+        }
+        #modalOverlay.open { display:flex; }
+
+        #modal {
+            background: linear-gradient(135deg, #0a1520 0%, #0d1f30 100%);
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--color, var(--primary));
+            border-radius: 14px;
+            padding: 28px 30px;
+            width: min(400px, 90vw);
+            position:relative;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+            animation: modalIn .2s ease;
+        }
+        @keyframes modalIn {
+            from { opacity:0; transform:scale(.94) translateY(10px); }
+            to   { opacity:1; transform:scale(1) translateY(0); }
+        }
+        .modal-close {
+            position:absolute; top:14px; right:16px;
+            background:none; border:none;
+            color:var(--muted); font-size:20px;
+            cursor:pointer;
+        }
+        .modal-close:hover { color:#fff; }
+        .modal-num {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:13px; letter-spacing:2px;
+            color:var(--color, var(--primary));
+            text-transform:uppercase;
+        }
+        .modal-name {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:32px; font-weight:900;
+            color:#fff; line-height:1; margin:4px 0 14px;
+        }
+        .modal-badge {
+            display:inline-block;
+            background:var(--color, var(--primary));
+            color:#000; font-family:'Barlow Condensed',sans-serif;
+            font-size:11px; font-weight:700; letter-spacing:1.5px;
+            text-transform:uppercase;
+            padding:3px 10px; border-radius:20px;
+            margin-bottom:18px;
+        }
+        .modal-section-title {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:11px; letter-spacing:2px;
+            color:var(--muted); text-transform:uppercase;
+            margin-bottom:8px;
+        }
+        .modal-positions {
+            display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;
+        }
+        .modal-pos-pill {
+            background:rgba(255,255,255,0.07);
+            border:1px solid var(--border);
+            border-radius:6px;
+            padding:4px 12px;
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:15px; font-weight:700; color:#fff;
+            display:flex; align-items:center; gap:6px;
+        }
+        .modal-pos-pill .rank {
+            font-size:10px; color:var(--primary);
+            font-weight:400;
+        }
+        .modal-inning-list {
+            display:flex; flex-direction:column; gap:4px;
+        }
+        .modal-inning-row {
+            display:flex; align-items:center; gap:10px;
+            font-size:13px;
+        }
+        .modal-inning-label {
+            font-family:'Barlow Condensed',sans-serif;
+            color:var(--muted); font-size:12px; width:60px;
+        }
+        .modal-inning-pos {
+            font-family:'Barlow Condensed',sans-serif;
+            font-weight:700; color:var(--primary);
+        }
+        /* Position checkbox pills */
+        .pos-checkbox {
+            display:flex; align-items:center; gap:5px;
+            background:rgba(255,255,255,0.05);
+            border:1px solid var(--border);
+            border-radius:6px;
+            padding:5px 10px;
+            cursor:pointer;
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:14px; font-weight:700; color:var(--muted);
+            transition:all .15s; user-select:none;
+        }
+        .pos-checkbox.selected {
+            background:rgba(0,213,255,0.12);
+            border-color:var(--primary);
+            color:#fff;
+        }
+        .pos-checkbox .pos-rank {
+            font-size:9px; color:var(--primary);
+            min-width:10px; text-align:center;
+        }
+        /* Inning assignment dropdowns */
+        .inning-pos-select {
+            background:rgba(0,213,255,0.07);
+            border:1px solid var(--border);
+            color:var(--primary);
+            font-family:'Barlow Condensed',sans-serif;
+            font-weight:700; font-size:13px;
+            padding:3px 6px; border-radius:5px;
+            cursor:pointer; outline:none;
+            flex:1;
+        }
+        .inning-pos-select option { background:#0a1520; color:#fff; }
+
+        /* ── AVAILABILITY MODAL ── */
+        #availModal {
+            background: linear-gradient(135deg,#0a1520,#0d1f30);
+            border:1px solid var(--border);
+            border-top:3px solid var(--primary);
+            border-radius:14px;
+            padding:24px 26px;
+            width:min(520px,95vw);
+            max-height:80vh;
+            overflow-y:auto;
+            position:relative;
+            box-shadow:0 24px 80px rgba(0,0,0,.8);
+            animation:modalIn .2s ease;
+        }
+        .avail-title {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:22px; font-weight:900; letter-spacing:2px;
+            color:#fff; margin-bottom:6px;
+        }
+        .avail-subtitle {
+            font-size:13px; color:var(--muted); margin-bottom:18px;
+        }
+        .avail-grid {
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:8px;
+            margin-bottom:20px;
+        }
+        .avail-item {
+            display:flex; align-items:center; gap:10px;
+            background:rgba(255,255,255,0.04);
+            border:1px solid var(--border);
+            border-left:3px solid var(--color,var(--primary));
+            border-radius:7px;
+            padding:8px 12px;
+            cursor:pointer;
+            transition:background .15s;
+        }
+        .avail-item:hover { background:rgba(255,255,255,0.09); }
+        .avail-item input[type=checkbox] { display:none; }
+        .avail-check {
+            width:16px; height:16px; border-radius:4px;
+            border:2px solid var(--border);
+            background:transparent;
+            display:flex; align-items:center; justify-content:center;
+            flex-shrink:0; transition:all .15s;
+        }
+        .avail-item.checked .avail-check {
+            background:var(--color,var(--primary));
+            border-color:var(--color,var(--primary));
+        }
+        .avail-item.checked .avail-check::after {
+            content:'✓'; color:#000; font-size:10px; font-weight:900;
+        }
+        .avail-name {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:14px; font-weight:700; color:#fff;
+        }
+        .avail-num {
+            font-size:11px; color:var(--muted);
+        }
+        .avail-actions {
+            display:flex; gap:10px; flex-wrap:wrap;
+        }
+
+        /* ── TOAST ── */
+        #toast {
+            position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+            background:rgba(0,213,255,0.12);
+            border:1px solid var(--primary);
+            color:var(--primary);
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:14px; letter-spacing:1px;
+            padding:8px 20px; border-radius:8px;
+            z-index:999; opacity:0;
+            transition:opacity .3s;
+            pointer-events:none;
+        }
+        #toast.show { opacity:1; }
+
+        /* ── MOBILE ── */
+        @media (max-width:640px) {
+            #topbar .brand { font-size:16px; }
+            .tb-label { display:none; }
+            #sidePanel { position:fixed; right:0; top:56px; bottom:0; z-index:150; }
+            #togglePanel { top:calc(56px + 40px); }
+            .avail-grid { grid-template-columns:1fr; }
+        }
+
+        /* Drop target highlight */
+        .pos-drop-zone {
+            position:absolute;
+            transform:translate(-50%,-50%);
+            /* width/height set dynamically in renderBubbles to match SVG scale */
+            border-radius:50%;
+            border:2px dashed rgba(0,213,255,0.0); /* invisible until drag */
+            pointer-events:all;
+            transition:border-color .15s, background .15s;
+        }
+        .pos-drop-zone.drag-over {
+            border:2px dashed var(--primary);
+            background:rgba(0,213,255,0.1);
+        }
+
+        /* inning pip row */
+        .inning-pips {
+            display:flex; gap:4px; margin-top:2px;
+        }
+        .pip {
+            width:5px; height:5px; border-radius:50%;
+            background:var(--color, var(--primary));
+            opacity:.5;
+        }
+        .pip.active { opacity:1; }
+    </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+
+    <!-- Always visible: brand -->
+    <div class="brand">LINE<span>UP</span></div>
+
+    <!-- Game info (hidden on very narrow) -->
+    <div class="tb-divider" id="topbarGameInfo"></div>
+    <div id="topbarGameInfo" style="display:flex;flex-direction:column;line-height:1.1;flex-shrink:0;">
+        <span id="todayDate" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;"></span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#fff;">vs <span id="opponentName" style="color:var(--primary);">—</span></span>
+    </div>
+
+    <div class="tb-divider"></div>
+
+    <!-- Inning selector — always visible -->
+    <span class="tb-label tb-hide-md">Inning</span>
+    <select id="inningSelect">
+        <option value="1">Inning 1</option>
+        <option value="2">Inning 2</option>
+        <option value="3">Inning 3</option>
+        <option value="4">Inning 4</option>
+        <option value="5">Inning 5</option>
+        <option value="6">Inning 6</option>
+        <option value="7">Inning 7</option>
+    </select>
+
+    <!-- Undo/Redo — always visible, icon-only on small -->
+    <div class="tb-divider tb-overflow"></div>
+    <button class="tb-btn tb-overflow" id="undoBtn" title="Undo" disabled>
+        <i class="fas fa-undo"></i><span class="tb-hide-md"> Undo</span>
+    </button>
+    <button class="tb-btn tb-overflow" id="redoBtn" title="Redo" disabled>
+        <i class="fas fa-redo"></i><span class="tb-hide-md"> Redo</span>
+    </button>
+
+    <!-- Generate / Clear — always visible, text hidden on md -->
+    <div class="tb-divider tb-overflow"></div>
+    <button class="tb-btn tb-overflow" id="generateBtn" style="background:rgba(0,213,255,.12)">
+        <i class="fas fa-magic"></i><span class="tb-hide-md"> Generate</span>
+    </button>
+    <button class="tb-btn accent tb-overflow" id="clearBtn">
+        <i class="fas fa-eraser"></i><span class="tb-hide-md"> Clear</span>
+    </button>
+
+    <div class="tb-spacer"></div>
+
+    <!-- Availability + Roster — always visible, text hidden on md -->
+    <button class="tb-btn tb-overflow" id="availBtn">
+        <i class="fas fa-users"></i><span class="tb-hide-md"> Availability</span>
+    </button>
+    <button class="tb-btn tb-overflow" id="panelToggleBtn">
+        <i class="fas fa-list"></i><span class="tb-hide-md"> Roster</span>
+    </button>
+
+    <!-- Hamburger — shown only when tb-overflow items are hidden -->
+    <button id="menuBtn" title="More options">
+        <i class="fas fa-bars"></i>
+    </button>
+</div>
+
+<!-- OVERFLOW DROPDOWN (populated by JS on narrow screens) -->
+<div id="overflowMenu">
+    <div class="menu-label">Inning</div>
+    <select id="inningSelectMobile" style="
+        background:rgba(0,213,255,0.07);border:1px solid var(--border);
+        color:var(--primary);font-family:'Barlow Condensed',sans-serif;
+        font-weight:700;font-size:14px;padding:6px 10px;border-radius:6px;
+        outline:none;width:100%;cursor:pointer;">
+        <option value="1">Inning 1</option>
+        <option value="2">Inning 2</option>
+        <option value="3">Inning 3</option>
+        <option value="4">Inning 4</option>
+        <option value="5">Inning 5</option>
+        <option value="6">Inning 6</option>
+        <option value="7">Inning 7</option>
+    </select>
+    <div class="menu-divider"></div>
+    <button class="tb-btn" id="undoBtnM"     disabled><i class="fas fa-undo"></i> Undo</button>
+    <button class="tb-btn" id="redoBtnM"     disabled><i class="fas fa-redo"></i> Redo</button>
+    <div class="menu-divider"></div>
+    <button class="tb-btn" id="generateBtnM" style="background:rgba(0,213,255,.12)"><i class="fas fa-magic"></i> Generate Lineup</button>
+    <button class="tb-btn accent" id="clearBtnM"><i class="fas fa-eraser"></i> Clear Inning</button>
+    <div class="menu-divider"></div>
+    <button class="tb-btn" id="availBtnM"    style="color:#22c55e;border-color:rgba(34,197,94,0.3)"><i class="fas fa-users"></i> Availability</button>
+    <button class="tb-btn" id="panelBtnM"><i class="fas fa-list"></i> Roster</button>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+    <!-- FIELD -->
+    <div id="fieldWrap">
+        <svg id="fieldSvg" viewBox="0 0 900 900" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+            <!--
+              2.2px/ft  ViewBox 900x900
+              Home apex (450,830) | 1B (590,690) | 2B (450,550) | 3B (310,690)
+              Mound ctr (450,700) r=19.8 | LF pole (-32,348) RF pole (932,348)
+              Outfield arc r=682 from home | Infield arc r=209 from mound
+            -->
+            <defs>
+                <radialGradient id="grassGrad" cx="50%" cy="100%" r="80%">
+                    <stop offset="0%"   stop-color="#2d6b2a"/>
+                    <stop offset="60%"  stop-color="#1e4d1c"/>
+                    <stop offset="100%" stop-color="#122e11"/>
+                </radialGradient>
+                <radialGradient id="infieldGrassGrad" cx="50%" cy="70%" r="60%">
+                    <stop offset="0%"   stop-color="#2e6e2b"/>
+                    <stop offset="100%" stop-color="#1d4d1b"/>
+                </radialGradient>
+                <radialGradient id="dirtGrad" cx="50%" cy="40%" r="70%">
+                    <stop offset="0%"   stop-color="#b8703a"/>
+                    <stop offset="100%" stop-color="#8f4f22"/>
+                </radialGradient>
+                <linearGradient id="moundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%"   stop-color="#c97e44"/>
+                    <stop offset="100%" stop-color="#9a5526"/>
+                </linearGradient>
+                <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.6"/>
+                </filter>
+                <!-- Outfield clip: full wedge from backstop through arc -->
+                <clipPath id="outfieldClip">
+                    <path d="M 450,900 L 450,830 L -32,348 A 682,682 0 0,1 932,348 L 450,830 Z"/>
+                </clipPath>
+                <!-- Infield grass clip (slightly inside base paths) -->
+                <clipPath id="infieldGrassClip">
+                    <polygon points="450,812 578,690 450,568 322,690"/>
+                </clipPath>
+            </defs>
+
+            <!-- 1. DARK BACKGROUND -->
+            <rect width="900" height="900" fill="#0a140a"/>
+
+            <!-- 2. OUTFIELD GRASS (clipped to fair territory) -->
+            <g clip-path="url(#outfieldClip)">
+                <rect width="900" height="900" fill="url(#grassGrad)"/>
+            </g>
+
+            <!-- 3. GRASS MOWING STRIPES (45° fan, clipped to outfield) -->
+            <g clip-path="url(#outfieldClip)" opacity="0.07">
+                <line x1="450" y1="852" x2="-452" y2="-50" stroke="white" stroke-width="32"/>
+                <line x1="450" y1="852" x2="-290" y2="-50" stroke="black" stroke-width="32"/>
+                <line x1="450" y1="852" x2="-153" y2="-50" stroke="white" stroke-width="32"/>
+                <line x1="450" y1="852" x2="-32"  y2="-50" stroke="black" stroke-width="32"/>
+                <line x1="450" y1="852" x2="76"   y2="-50" stroke="white" stroke-width="32"/>
+                <line x1="450" y1="852" x2="176"  y2="-50" stroke="black" stroke-width="32"/>
+                <line x1="450" y1="852" x2="271"  y2="-50" stroke="white" stroke-width="32"/>
+                <line x1="450" y1="852" x2="361"  y2="-50" stroke="black" stroke-width="32"/>
+                <line x1="450" y1="852" x2="450"  y2="-50" stroke="white" stroke-width="32"/>
+                <line x1="450" y1="852" x2="539"  y2="-50" stroke="black" stroke-width="32"/>
+                <line x1="450" y1="852" x2="629"  y2="-50" stroke="white" stroke-width="32"/>
+                <line x1="450" y1="852" x2="724"  y2="-50" stroke="black" stroke-width="32"/>
+                <line x1="450" y1="852" x2="824"  y2="-50" stroke="white" stroke-width="32"/>
+                <line x1="450" y1="852" x2="932"  y2="-50" stroke="black" stroke-width="32"/>
+                <line x1="450" y1="852" x2="1053" y2="-50" stroke="white" stroke-width="32"/>
+                <line x1="450" y1="852" x2="1190" y2="-50" stroke="black" stroke-width="32"/>
+                <line x1="450" y1="852" x2="1352" y2="-50" stroke="white" stroke-width="32"/>
+            </g>
+
+            <!-- 4. WARNING TRACK (thick arc, 15ft wide = 33px) -->
+            <path d="M -32,348 A 682,682 0 0,1 932,348"
+                  fill="none" stroke="#6b4828" stroke-width="34" opacity="0.92"/>
+            <!-- Warning track inner edge chalk -->
+            <path d="M -32,348 A 682,682 0 0,1 932,348"
+                  fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" opacity="1"
+                  transform="translate(0,17) scale(1)"/>
+
+            <!-- 5. OUTFIELD WALL -->
+            <path d="M -32,348 A 682,682 0 0,1 932,348"
+                  fill="none" stroke="#3d6b2e" stroke-width="7" opacity="0.85"/>
+
+            <!-- 6. FOUL LINES (exact 45° from home apex to poles) -->
+            <line x1="450" y1="852" x2="-32"  y2="348" stroke="white" stroke-width="2.5" opacity="0.75"/>
+            <line x1="450" y1="852" x2="932"  y2="348" stroke="white" stroke-width="2.5" opacity="0.75"/>
+
+            <!-- 7. INFIELD DIRT — rotated square diamond -->
+            <polygon points="450,830 590,690 450,550 310,690"
+                     fill="url(#dirtGrad)" opacity="0.96"/>
+
+            <!-- 8. INFIELD ARC DIRT — arc from 3B to 1B centered on mound -->
+            <path d="M 310,690 A 209,209 0 0,1 590,690"
+                  fill="url(#dirtGrad)" opacity="0.9"/>
+
+            <!-- 9. INNER INFIELD GRASS (inside base paths) -->
+            <polygon points="450,812 578,690 450,568 322,690"
+                     fill="url(#infieldGrassGrad)"/>
+
+            <!-- 10. INFIELD GRASS MOWING STRIPES (horizontal bands) -->
+            <g clip-path="url(#infieldGrassClip)" opacity="0.09">
+                <rect x="310" y="780" width="280" height="18" fill="black"/>
+                <rect x="310" y="762" width="280" height="18" fill="white"/>
+                <rect x="310" y="744" width="280" height="18" fill="black"/>
+                <rect x="310" y="726" width="280" height="18" fill="white"/>
+                <rect x="310" y="708" width="280" height="18" fill="black"/>
+                <rect x="310" y="690" width="280" height="18" fill="white"/>
+                <rect x="310" y="672" width="280" height="18" fill="black"/>
+                <rect x="310" y="654" width="280" height="18" fill="white"/>
+                <rect x="310" y="636" width="280" height="18" fill="black"/>
+                <rect x="310" y="618" width="280" height="18" fill="white"/>
+                <rect x="310" y="600" width="280" height="18" fill="black"/>
+                <rect x="310" y="582" width="280" height="18" fill="white"/>
+                <rect x="310" y="564" width="280" height="18" fill="black"/>
+            </g>
+
+            <!-- 11. BASE PATH CHALK -->
+            <polygon points="450,830 590,690 450,550 310,690"
+                     fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+
+            <!-- 12. INFIELD ARC CHALK LINE -->
+            <path d="M 310,690 A 209,209 0 0,1 590,690"
+                  fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+
+            <!-- 13. PITCHER'S MOUND -->
+            <!-- Mound outer shadow ring -->
+            <ellipse cx="450" cy="703" rx="24" ry="18" fill="rgba(0,0,0,0.35)"/>
+            <!-- Mound dirt body -->
+            <ellipse cx="450" cy="700" rx="22" ry="20" fill="url(#moundGrad)"/>
+            <!-- Mound top highlight -->
+            <ellipse cx="450" cy="697" rx="11" ry="7"  fill="#d08848" opacity="0.55"/>
+            <!-- Pitcher's rubber -->
+            <rect x="437" y="694" width="26" height="6" rx="1"
+                  fill="white" opacity="0.96" filter="url(#shadow)"/>
+
+            <!-- 14. HOME PLATE AREA -->
+            <!-- Catcher/batter dirt circle -->
+            <ellipse cx="450" cy="840" rx="38" ry="24" fill="url(#dirtGrad)" opacity="0.88"/>
+            <!-- Left batter box (dirt fill) -->
+            <rect x="424" y="812" width="18" height="30" rx="1" fill="url(#dirtGrad)" opacity="0.55"/>
+            <!-- Right batter box (dirt fill) -->
+            <rect x="458" y="812" width="18" height="30" rx="1" fill="url(#dirtGrad)" opacity="0.55"/>
+            <!-- Batter box chalk outlines -->
+            <rect x="424" y="812" width="18" height="30" rx="1"
+                  fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/>
+            <rect x="458" y="812" width="18" height="30" rx="1"
+                  fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/>
+            <!-- Catcher box chalk -->
+            <rect x="440" y="832" width="20" height="24" rx="1"
+                  fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+            <!-- Home plate pentagon (apex at 450,842, 45° angled sides) -->
+            <polygon points="450,842 440,832 440,820 460,820 460,832"
+                     fill="white" opacity="0.97" filter="url(#shadow)"/>
+
+            <!-- 15. BASES -->
+            <!-- Shadows -->
+            <ellipse cx="591" cy="693" rx="10" ry="6" fill="rgba(0,0,0,0.4)"/>
+            <ellipse cx="450" cy="553" rx="10" ry="6" fill="rgba(0,0,0,0.4)"/>
+            <ellipse cx="309" cy="693" rx="10" ry="6" fill="rgba(0,0,0,0.4)"/>
+            <!-- White bags -->
+            <rect x="582" y="682" width="16" height="16" rx="2"
+                  fill="white" transform="rotate(45,590,690)" filter="url(#shadow)"/>
+            <rect x="442" y="542" width="16" height="16" rx="2"
+                  fill="white" transform="rotate(45,450,550)" filter="url(#shadow)"/>
+            <rect x="302" y="682" width="16" height="16" rx="2"
+                  fill="white" transform="rotate(45,310,690)" filter="url(#shadow)"/>
+
+            <!-- 16. FOUL POLES -->
+            <line x1="-32" y1="290" x2="-32" y2="395" stroke="#f0c020" stroke-width="5" opacity="0.85"/>
+            <line x1="932" y1="290" x2="932" y2="395" stroke="#f0c020" stroke-width="5" opacity="0.85"/>
+
+            <!-- 17. POSITION GUIDES (very faint) -->
+            <g font-family="'Barlow Condensed',sans-serif" font-size="12"
+               fill="rgba(255,255,255,0.13)" text-anchor="middle" font-weight="700" letter-spacing="1">
+                <text x="450" y="172">CF</text>
+                <text x="190" y="318">LF</text>
+                <text x="710" y="318">RF</text>
+                <text x="450" y="714">P</text>
+                <text x="450" y="872">C</text>
+                <text x="294" y="646">3B</text>
+                <text x="606" y="646">1B</text>
+                <text x="510" y="584">2B</text>
+                <text x="385" y="590">SS</text>
+            </g>
+        </svg>
+
+        <!-- Drop zones & Bubbles layer -->
+        <div id="bubblesLayer"></div>
+    </div>
+
+    <!-- SIDE PANEL -->
+    <div id="sidePanel">
+        <div class="panel-header">
+            <span class="panel-title">Roster</span>
+            <button class="panel-close" id="panelCloseBtn">✕</button>
+        </div>
+        <div class="panel-legend">
+            <div class="legend-row"><div class="legend-dot" style="background:var(--starter)"></div> Starter</div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--backup)"></div> Backup</div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--ifnec)"></div> If Necessary</div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--parttime)"></div> Part Time</div>
+        </div>
+        <div class="panel-list" id="rosterList"></div>
+    </div>
+</div>
+
+<!-- AVAILABILITY MODAL -->
+<div id="modalOverlay">
+    <div id="availModal">
+        <button class="modal-close" id="availClose">✕</button>
+        <div class="avail-title">Availability</div>
+        <div class="avail-subtitle">Select players available for today's game.</div>
+        <div class="avail-grid" id="availGrid"></div>
+        <div class="avail-actions">
+            <button class="tb-btn" id="selectAll"><i class="fas fa-check-double"></i> Select All</button>
+            <button class="tb-btn" id="selectNone"><i class="fas fa-times"></i> Clear All</button>
+            <button class="tb-btn accent" id="confirmAvail"><i class="fas fa-check"></i> Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div id="profileOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+    <div id="modal">
+        <button class="modal-close" id="profileClose">✕</button>
+        <div class="modal-num" id="mNum"></div>
+        <div class="modal-name" id="mName"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+            <div class="modal-badge" id="mBadge"></div>
+            <button class="tb-btn" id="mSaveBtn" style="font-size:11px;padding:4px 12px;">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+        </div>
+
+        <div class="modal-section-title">Position Preferences <span style="color:var(--muted);font-size:10px;font-weight:400;letter-spacing:0;">(select all that apply, drag to reorder)</span></div>
+        <div id="mPosCheckboxes" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;"></div>
+
+        <div class="modal-section-title">Inning Assignments</div>
+        <div class="modal-inning-list" id="mInnings"></div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  ROSTER DATA  (edit this JSON to update players)
+// ═══════════════════════════════════════════════
+const ROSTER = [
+  { id:1,  name:"Dan Hunt",        number:"23",  level:"Backup",       positions:["1B","P"] },
+  { id:2,  name:"AJ Verunac",      number:"19",  level:"Part Time",    positions:["RF","C","1B"] },
+  { id:3,  name:"Brian Cloninger", number:"13",  level:"Starter",      positions:["P"] },
+  { id:4,  name:"Craig Wertenberg",number:"18",  level:"If Necessary", positions:["RF","P"] },
+  { id:5,  name:"David Perryman",  number:"17",  level:"If Necessary", positions:["RF","LF"] },
+  { id:6,  name:"David Phillips",  number:"11",  level:"If Necessary", positions:["2B","RF"] },
+  { id:7,  name:"DeMarcus Kelly",  number:"TBD", level:"Starter",      positions:["CF"] },
+  { id:8,  name:"Eric Kim",        number:"1",   level:"Starter",      positions:["3B","P"] },
+  { id:9,  name:"Carlos Pena",     number:"TBD", level:"Backup",       positions:["2B","C"] },
+  { id:10, name:"Jose Hernandez",  number:"TBD", level:"Starter",      positions:["C"] },
+  { id:11, name:"Joey Risso",      number:"20",  level:"Backup",       positions:["C"] },
+  { id:12, name:"Jordan Hooper",   number:"0",   level:"Starter",      positions:["SS"] },
+  { id:13, name:"Justin Hayes",    number:"TBD", level:"Backup",       positions:["2B","SS","3B"] },
+  { id:14, name:"Malique McAdoo",  number:"25",  level:"Part Time",    positions:["1B"] },
+  { id:15, name:"Mike Caggiano",   number:"TBD", level:"If Necessary", positions:["RF","LF"] },
+  { id:16, name:"Bud Carson",      number:"43",  level:"If Necessary", positions:["C"] },
+  { id:17, name:"Abel Pena",       number:"TBD", level:"Starter",      positions:["2B","3B"] },
+  { id:18, name:"Wayne Van Nice",  number:"8",   level:"If Necessary", positions:["2B","RF"] },
+  { id:19, name:"Wes Hawthorn",    number:"4",   level:"Starter",      positions:["LF","CF"] },
+  { id:20, name:"Will Musser",     number:"TBD", level:"Starter",      positions:["1B","P","3B"] },
+  { id:21, name:"Zac Cantor",      number:"27",  level:"Starter",      positions:["RF","LF","2B"] },
+  { id:22, name:"Steven Manz",     number:"5",   level:"If Necessary", positions:["2B"] },
+];
+
+// Field position SVG coordinates (raw, 900x900 viewBox, 2.2px/ft).
+// These are converted to screen px at render time via svgToScreen().
+// All positions reflect where a real player would stand.
+const POSITIONS = {
+    // Pitcher: on the mound, slightly toward home from rubber
+    P:    { label:"Pitcher",      svgX: 450, svgY: 710 },
+    // Catcher: behind home plate, in the crouch zone
+    C:    { label:"Catcher",      svgX: 450, svgY: 858 },
+    // 1B: behind bag, shading toward home (~8ft back, ~10ft toward home)
+    "1B": { label:"First Base",   svgX: 608, svgY: 713 },
+    // 2B: between 1st and 2nd, ~15ft behind 2B bag, shaded toward 1B
+    "2B": { label:"Second Base",  svgX: 524, svgY: 586 },
+    // 3B: behind bag, shading toward home (mirrors 1B)
+    "3B": { label:"Third Base",   svgX: 292, svgY: 713 },
+    // SS: between 2nd and 3rd, mirrors 2B on other side
+    SS:   { label:"Shortstop",    svgX: 368, svgY: 591 },
+    // Outfielders: well into the outfield grass
+    LF:   { label:"Left Field",   svgX: 190, svgY: 348 },
+    CF:   { label:"Center Field", svgX: 450, svgY: 215 },
+    RF:   { label:"Right Field",  svgX: 710, svgY: 348 },
+};
+
+// ═══════════════════════════════════════════════
+//  FIELD LANDMARK COORDINATES
+//  Raw SVG coordinates in the 900×900 viewBox.
+//  Use getFieldPixels(key) to get live screen px.
+//  Scale: 2.2px per foot.
+// ═══════════════════════════════════════════════
+const FIELD_COORDS_SVG = {
+    // Bases (center of each bag)
+    HOME:   { x: 450, y: 830 },  // home plate center
+    FIRST:  { x: 590, y: 690 },  // 1st base bag
+    SECOND: { x: 450, y: 550 },  // 2nd base bag
+    THIRD:  { x: 310, y: 690 },  // 3rd base bag
+    // Mound
+    MOUND:  { x: 450, y: 700 },  // pitcher's mound center (59ft)
+    RUBBER: { x: 450, y: 697 },  // pitcher's rubber front edge (60.5ft)
+    // Home plate geometry (visual scale)
+    HOME_APEX:  { x: 450, y: 842 }, // pointed tip (catcher side)
+    HOME_LEFT:  { x: 440, y: 832 }, // left back corner
+    HOME_RIGHT: { x: 460, y: 832 }, // right back corner
+    HOME_FL:    { x: 440, y: 820 }, // left front corner (faces pitcher)
+    HOME_FR:    { x: 460, y: 820 }, // right front corner
+    // Foul poles
+    LF_POLE: { x: -32, y: 348 },
+    RF_POLE: { x: 932, y: 348 },
+    // Stripe / foul line origin (10ft below home apex)
+    STRIPE_ORIGIN: { x: 450, y: 852 },
+};
+const FIELD_SVG_W = 900;
+const FIELD_SVG_H = 900;
+
+/**
+ * Core SVG→screen transform for xMidYMid meet.
+ * Returns { x, y, scale } for any raw SVG coordinate.
+ * All bubble/dropzone placement flows through this.
+ */
+function svgTransform() {
+    const wrap = document.getElementById('fieldWrap');
+    const wrapW = wrap.offsetWidth;
+    const wrapH = wrap.offsetHeight;
+    const scale = Math.min(wrapW / FIELD_SVG_W, wrapH / FIELD_SVG_H);
+    const rendW = FIELD_SVG_W * scale;
+    const rendH = FIELD_SVG_H * scale;
+    return {
+        scale,
+        offX: (wrapW - rendW) / 2,
+        offY: (wrapH - rendH) / 2,
+    };
+}
+
+function svgToScreen(svgX, svgY) {
+    const t = svgTransform();
+    return { x: t.offX + svgX * t.scale, y: t.offY + svgY * t.scale };
+}
+
+// Named landmark lookup (still available for future use)
+function getFieldPixels(key) {
+    const coord = FIELD_COORDS_SVG[key];
+    if (!coord) return null;
+    return svgToScreen(coord.x, coord.y);
+}
+
+/**
+ * Scale a font/size value proportionally to the current SVG render scale.
+ * baseSize is the size at scale=1 (900px wide field).
+ */
+function scaledSize(baseSize) {
+    return Math.round(baseSize * svgTransform().scale);
+}
+
+const LEVEL_COLOR = {
+    "Starter":      "var(--starter)",
+    "Backup":       "var(--backup)",
+    "If Necessary": "var(--ifnec)",
+    "Part Time":    "var(--parttime)",
+};
+const LEVEL_ORDER = ["Starter","Backup","If Necessary","Part Time"];
+const INNINGS = [1,2,3,4,5,6,7];
+const POS_KEYS = Object.keys(POSITIONS);
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let availablePlayers = new Set(ROSTER.map(p=>p.id)); // all available by default
+let currentInning = 1;
+
+// lineup[inning][position] = playerId | null
+let lineup = {};
+INNINGS.forEach(i => {
+    lineup[i] = {};
+    POS_KEYS.forEach(p => lineup[i][p] = null);
+});
+
+// Undo/redo stacks — each entry is a deep copy of lineup
+let undoStack = [];
+let redoStack = [];
+
+// Drag state
+let dragInfo = null; // { playerId, fromPos, fromPanel }
+
+// ═══════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════
+function getPlayer(id){ return ROSTER.find(p=>p.id===id); }
+function playerColor(p){ return LEVEL_COLOR[p.level] || "var(--primary)"; }
+
+function deepCloneLineup(l){
+    const c={};
+    INNINGS.forEach(i=>{ c[i]={}; POS_KEYS.forEach(p=>c[i][p]=l[i][p]); });
+    return c;
+}
+function saveUndo(){
+    undoStack.push(deepCloneLineup(lineup));
+    redoStack=[];
+    updateUndoRedoBtns();
+}
+function updateUndoRedoBtns(){
+    document.getElementById('undoBtn').disabled = undoStack.length===0;
+    document.getElementById('redoBtn').disabled = redoStack.length===0;
+}
+
+function showToast(msg, dur=2200){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+// Which positions are occupied by a player in a given inning
+function positionsOccupiedBy(playerId, inning){
+    return POS_KEYS.filter(p=>lineup[inning][p]===playerId);
+}
+
+// Find what position a player is placed in the current inning
+function currentPosOf(playerId){
+    return POS_KEYS.find(p=>lineup[currentInning][p]===playerId) || null;
+}
+
+// ═══════════════════════════════════════════════
+//  LINEUP GENERATION
+// ═══════════════════════════════════════════════
+function generateLineup(){
+    saveUndo();
+
+    const avail = [...availablePlayers]
+        .map(id => getPlayer(id))
+        .filter(Boolean)
+        .sort((a,b) => LEVEL_ORDER.indexOf(a.level) - LEVEL_ORDER.indexOf(b.level));
+
+    if(avail.length === 0){
+        showToast('No players available — check Availability first');
+        return;
+    }
+
+    const newLineup = {};
+    INNINGS.forEach(i => {
+        newLineup[i] = {};
+        POS_KEYS.forEach(p => newLineup[i][p] = null);
+    });
+
+    // ── SCORE: lower = better fit ──────────────────────────────────────
+    // Returns Infinity if the position is not in the player's preference list.
+    // That makes the combo invisible to the greedy picker — hard block.
+    function score(player, pos){
+        const prefIdx = player.positions.indexOf(pos);
+        if(prefIdx === -1) return Infinity;          // never assign outside preferences
+        const levelIdx = LEVEL_ORDER.indexOf(player.level);
+        return prefIdx * 4 + levelIdx;               // rank 0 + Starter = best
+    }
+
+    // ── GREEDY BEST-FIT ASSIGNMENT for one inning ──────────────────────
+    // lockedIn: { pos -> playerId } — positions already decided (carry-overs)
+    // eligiblePlayers: array of player objects allowed to be assigned this inning
+    // Returns complete assignment { pos -> playerId | null }
+    function assignInning(lockedIn, eligiblePlayers){
+        const assignment = { ...lockedIn };
+        const used = new Set(Object.values(lockedIn).filter(Boolean));
+
+        const openPos     = POS_KEYS.filter(p => !assignment[p]);
+        const openPlayers = eligiblePlayers.filter(p => !used.has(p.id));
+
+        // Build all (pos, player) combos sorted by score — skip hard-blocked pairs
+        const combos = [];
+        for(const pos of openPos)
+            for(const player of openPlayers){
+                const s = score(player, pos);
+                if(s === Infinity) continue;          // player has no preference for this pos
+                combos.push({ pos, player, s });
+            }
+        combos.sort((a,b) => a.s - b.s);
+
+        const filledPos  = new Set(Object.keys(assignment));
+        const usedPlayers = new Set(used);
+
+        for(const { pos, player } of combos){
+            if(filledPos.has(pos) || usedPlayers.has(player.id)) continue;
+            assignment[pos]  = player.id;
+            filledPos.add(pos);
+            usedPlayers.add(player.id);
+            // Stop when all positions are filled OR we run out of players —
+            // positions with no eligible player remain null (user fills manually)
+            if(openPlayers.length <= filledPos.size - lockedIn.size) break;
+        }
+
+        return assignment;
+    }
+
+    // ── ROTATION LOGIC ─────────────────────────────────────────────────
+    // Goal: every available player gets field time, rotating every 2 innings.
+    // A player is only rotated OUT if a bench player can cover their position.
+    // Positions stay filled as much as possible — never bench someone just to
+    // bench them if it leaves a hole nobody else can fill.
+
+    // Track innings played per player
+    const inningsPlayed = {};
+    avail.forEach(p => inningsPlayed[p.id] = 0);
+
+    // Can a player cover a given position?
+    function canPlay(player, pos){
+        return player.positions.includes(pos);
+    }
+
+    // Build initial field group: best-fit assignment for inning 1
+    // Start with everyone, let assignInning pick the best 9 (preference-matched)
+    let currentAssignment = assignInning({}, avail);
+
+    for(let i = 0; i < INNINGS.length; i++){
+        const inning = INNINGS[i];
+        const isNewBlock = (i % 2 === 0) && i > 0;
+
+        if(isNewBlock){
+            // Find who is currently on the field and who is on the bench
+            const onFieldIds  = new Set(Object.values(currentAssignment).filter(Boolean));
+            const benchPlayers = avail.filter(p => !onFieldIds.has(p.id))
+                .sort((a,b) => {
+                    // Bring in players with fewest innings first
+                    const diff = inningsPlayed[a.id] - inningsPlayed[b.id];
+                    if(diff !== 0) return diff;
+                    return LEVEL_ORDER.indexOf(a.level) - LEVEL_ORDER.indexOf(b.level);
+                });
+
+            if(benchPlayers.length > 0){
+                // Try to swap bench players in, position by position
+                // For each bench player, find a field player in the same position
+                // who has played the most innings and can be replaced
+                const nextAssignment = { ...currentAssignment };
+
+                for(const benchPlayer of benchPlayers){
+                    // Find positions this bench player can cover
+                    for(const pos of benchPlayer.positions){
+                        const currentHolder = nextAssignment[pos];
+                        if(!currentHolder) {
+                            // Empty slot — bench player fills it directly
+                            nextAssignment[pos] = benchPlayer.id;
+                            break;
+                        }
+                        const holder = getPlayer(currentHolder);
+                        if(!holder) continue;
+
+                        // Only rotate out the holder if they've played more innings
+                        // AND there's another position on the field they could move to,
+                        // OR if they're the most-played person on the field
+                        const holderInnings = inningsPlayed[currentHolder] || 0;
+                        const benchInnings  = inningsPlayed[benchPlayer.id] || 0;
+
+                        if(holderInnings > benchInnings){
+                            // Check: can the holder cover another open position after being displaced?
+                            // Or are they fine sitting this block?
+                            // Simple rule: swap them, then let assignInning re-seat the displaced player
+                            nextAssignment[pos] = benchPlayer.id;
+                            // Remove displaced player — assignInning will try to re-seat them
+                            // elsewhere if they have another position preference
+                            const displacedPos = Object.entries(nextAssignment)
+                                .filter(([p,id]) => id === currentHolder && p !== pos);
+                            // They're already displaced from pos, nothing else to clean up
+                            // Mark their old spot as open for re-assignment
+                            break;
+                        }
+                    }
+                }
+
+                // Re-run assignment with the current swap decisions.
+                // Pass nextAssignment as locked-in, then fill any gaps with all avail players
+                // This re-seats displaced players into remaining open spots if possible.
+                const lockedIn = {};
+                const allIds = new Set(avail.map(p => p.id));
+
+                // Figure out who is locked (appears in nextAssignment)
+                const assignedIds = new Set(Object.values(nextAssignment).filter(Boolean));
+
+                // Anyone NOT in nextAssignment values who WAS in currentAssignment
+                // has been displaced — try to re-seat them
+                const displaced = [...onFieldIds].filter(id => !assignedIds.has(id))
+                    .map(id => getPlayer(id)).filter(Boolean);
+
+                // Build final assignment: locked positions + re-seat displaced + fill gaps
+                const allEligible = [
+                    ...displaced,
+                    ...avail.filter(p => !assignedIds.has(p.id) && !displaced.find(d => d.id === p.id))
+                ];
+
+                // Start from nextAssignment as base, fill remaining open spots
+                currentAssignment = assignInning(nextAssignment, allEligible);
+            }
+        }
+
+        newLineup[inning] = { ...currentAssignment };
+
+        // Track innings played for everyone on field this inning
+        Object.values(currentAssignment).forEach(pid => {
+            if(pid) inningsPlayed[pid] = (inningsPlayed[pid] || 0) + 1;
+        });
+    }
+
+    lineup = newLineup;
+    renderAll();
+
+    // Summary toast
+    const onField  = new Set(Object.values(newLineup[1]).filter(Boolean)).size;
+    const benched  = avail.length - [...new Set(
+        Object.values(newLineup).flatMap(inn => Object.values(inn))
+    ).values()].filter(Boolean).length;
+    showToast(`Lineup generated — ${avail.length} players across 7 innings ✓`);
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════
+function renderAll(){
+    renderBubbles();
+    renderRosterPanel();
+}
+
+function renderBubbles(){
+    const layer = document.getElementById('bubblesLayer');
+    layer.innerHTML = '';
+
+    // Get the current SVG→screen transform once (shared by all bubbles)
+    const t = svgTransform();
+
+    // Bubble scale: at full 900px field, bubbles are "natural" CSS size.
+    // We scale font sizes and padding proportionally so bubbles shrink
+    // gracefully on small screens and grow on large ones.
+    // "natural" scale = when SVG fills a ~900px wide container.
+    const s = t.scale; // e.g. 0.5 on a 450px wide container
+
+    for(const posKey of POS_KEYS){
+        const posData = POSITIONS[posKey];
+        const screen  = svgToScreen(posData.svgX, posData.svgY);
+
+        const playerId = lineup[currentInning][posKey];
+
+        // ── DROP ZONE (invisible hit target) ──────────────────────
+        const dz = document.createElement('div');
+        dz.className = 'pos-drop-zone';
+        dz.style.left = `${screen.x}px`;
+        dz.style.top  = `${screen.y}px`;
+        // Scale drop zone hit radius with field
+        const dzSize = Math.max(44, Math.round(80 * s));
+        dz.style.width  = `${dzSize}px`;
+        dz.style.height = `${dzSize}px`;
+        dz.dataset.pos  = posKey;
+        setupDropZone(dz);
+        layer.appendChild(dz);
+
+        if(playerId){
+            const player = getPlayer(playerId);
+            if(!player) continue;
+            const color  = playerColor(player);
+            const bubble = createBubble(player, posKey, screen.x, screen.y, color, s);
+            layer.appendChild(bubble);
+        }
+    }
+}
+
+function createBubble(player, posKey, x, y, color, scale){
+    // scale: ratio of current render size to natural (900px) size
+    // Clamp so bubbles stay readable at extremes
+    const s = Math.max(0.45, Math.min(1.6, scale));
+
+    const el = document.createElement('div');
+    el.className = 'bubble';
+    el.style.left = `${x}px`;
+    el.style.top  = `${y}px`;
+    el.style.setProperty('--color', color);
+    el.dataset.playerId = player.id;
+    el.dataset.pos      = posKey;
+
+    const lastName = player.name.split(' ').pop();
+
+    // Scale every dimension with s
+    const pad    = `${Math.round(4*s)}px ${Math.round(9*s)}px ${Math.round(3*s)}px`;
+    const radius = `${Math.round(9*s)}px`;
+    const border = `${Math.max(1, Math.round(2*s))}px solid var(--color)`;
+    const minW   = `${Math.round(64*s)}px`;
+    const numSz  = `${Math.round(10*s)}px`;
+    const nameSz = `${Math.round(13*s)}px`;
+    const posSz  = `${Math.round(9*s)}px`;
+    const dotSz  = `${Math.round(7*s)}px`;
+    const dotMt  = `${Math.round(2*s)}px`;
+
+    el.innerHTML = `
+        <div class="bubble-card" style="
+            padding:${pad};
+            border-radius:${radius};
+            border:${border};
+            min-width:${minW};
+        ">
+            <div class="bubble-num"  style="font-size:${numSz}">#${player.number}</div>
+            <div class="bubble-name" style="font-size:${nameSz}">${lastName}</div>
+            <div class="bubble-pos-tag" style="font-size:${posSz}">${posKey}</div>
+        </div>
+        <div class="bubble-dot" style="
+            width:${dotSz}; height:${dotSz}; margin-top:${dotMt};
+        "></div>
+    `;
+
+    el.addEventListener('click', e => {
+        if(!dragInfo) openProfile(player.id);
+    });
+
+    setupBubbleDrag(el, player.id, posKey);
+    return el;
+}
+
+function renderRosterPanel(){
+    const list = document.getElementById('rosterList');
+    list.innerHTML='';
+
+    const sorted = [...ROSTER].sort((a,b)=>
+        LEVEL_ORDER.indexOf(a.level)-LEVEL_ORDER.indexOf(b.level)
+    );
+
+    for(const player of sorted){
+        if(!availablePlayers.has(player.id)) continue;
+
+        const onField = currentPosOf(player.id);
+        const color = playerColor(player);
+
+        const card = document.createElement('div');
+        card.className='player-card' + (onField ? ' on-field':'');
+        card.style.setProperty('--color', color);
+        card.dataset.playerId=player.id;
+
+        card.innerHTML=`
+            <div class="pc-num">${player.number}</div>
+            <div class="pc-info">
+                <div class="pc-name">${player.name}</div>
+                <div class="pc-pos">${player.positions.join(' · ')}${onField?' · <span style="color:'+color+'">'+onField+'</span>':''}</div>
+            </div>
+            <button class="pc-info-btn" data-pid="${player.id}" title="View profile">
+                <i class="fas fa-info-circle"></i>
+            </button>
+        `;
+
+        card.querySelector('.pc-info-btn').addEventListener('click',e=>{
+            e.stopPropagation();
+            openProfile(player.id);
+        });
+
+        if(!onField){
+            setupPanelDrag(card, player.id);
+        }
+
+        list.appendChild(card);
+    }
+}
+
+// ═══════════════════════════════════════════════
+//  DRAG & DROP
+// ═══════════════════════════════════════════════
+function setupBubbleDrag(el, playerId, fromPos){
+    let startX, startY, moved=false;
+
+    function onMouseDown(e){
+        if(e.button!==0) return;
+        e.preventDefault();
+        startX=e.clientX; startY=e.clientY; moved=false;
+
+        const onMove=ev=>{
+            if(Math.abs(ev.clientX-startX)>4||Math.abs(ev.clientY-startY)>4) moved=true;
+            if(!moved) return;
+            if(!dragInfo){
+                dragInfo={playerId, fromPos, fromPanel:false};
+                el.classList.add('dragging');
+            }
+            el.style.left=(parseFloat(el.style.left)+(ev.clientX-startX))+'px';
+            el.style.top =(parseFloat(el.style.top) +(ev.clientY-startY))+'px';
+            startX=ev.clientX; startY=ev.clientY;
+        };
+        const onUp=ev=>{
+            document.removeEventListener('mousemove',onMove);
+            document.removeEventListener('mouseup',onUp);
+            el.classList.remove('dragging');
+            if(!moved){ dragInfo=null; openProfile(playerId); return; }
+            dragInfo=null;
+            renderAll();
+        };
+        document.addEventListener('mousemove',onMove);
+        document.addEventListener('mouseup',onUp);
+    }
+
+    // Touch
+    function onTouchStart(e){
+        const t=e.touches[0];
+        startX=t.clientX; startY=t.clientY; moved=false;
+        const onMove=ev=>{
+            const tt=ev.touches[0];
+            if(Math.abs(tt.clientX-startX)>4||Math.abs(tt.clientY-startY)>4) moved=true;
+            if(!moved) return;
+            ev.preventDefault();
+            if(!dragInfo){ dragInfo={playerId,fromPos,fromPanel:false}; el.classList.add('dragging'); }
+            el.style.left=(parseFloat(el.style.left)+(tt.clientX-startX))+'px';
+            el.style.top =(parseFloat(el.style.top) +(tt.clientY-startY))+'px';
+            startX=tt.clientX; startY=tt.clientY;
+
+            // Check drop zones
+            const dzs=document.querySelectorAll('.pos-drop-zone');
+            dzs.forEach(dz=>dz.classList.remove('drag-over'));
+            const hit=getDropZoneUnder(tt.clientX, tt.clientY);
+            if(hit) hit.classList.add('drag-over');
+        };
+        const onEnd=ev=>{
+            document.removeEventListener('touchmove',onMove);
+            document.removeEventListener('touchend',onEnd);
+            el.classList.remove('dragging');
+            document.querySelectorAll('.pos-drop-zone').forEach(dz=>dz.classList.remove('drag-over'));
+            if(!moved){ dragInfo=null; openProfile(playerId); return; }
+            const t2=ev.changedTouches[0];
+            const hit=getDropZoneUnder(t2.clientX, t2.clientY);
+            if(hit) dropOnZone(hit.dataset.pos, playerId, fromPos);
+            dragInfo=null;
+            renderAll();
+        };
+        document.addEventListener('touchmove',onMove,{passive:false});
+        document.addEventListener('touchend',onEnd);
+    }
+
+    el.addEventListener('mousedown', onMouseDown);
+    el.addEventListener('touchstart', onTouchStart);
+}
+
+function setupPanelDrag(el, playerId){
+    let ghost=null, startX, startY, moved=false;
+
+    function begin(cx,cy){
+        startX=cx; startY=cy; moved=false;
+        dragInfo={playerId, fromPos:null, fromPanel:true};
+    }
+    function move(cx,cy){
+        if(Math.abs(cx-startX)<4&&Math.abs(cy-startY)<4) return;
+        moved=true;
+        if(!ghost){
+            ghost=document.createElement('div');
+            ghost.style.cssText=`position:fixed;pointer-events:none;z-index:999;
+                background:rgba(4,12,22,.9);border:2px solid var(--primary);
+                border-radius:8px;padding:4px 10px;font-family:'Barlow Condensed',sans-serif;
+                font-size:14px;font-weight:700;color:#fff;white-space:nowrap;`;
+            ghost.textContent=getPlayer(playerId).name;
+            document.body.appendChild(ghost);
+        }
+        ghost.style.left=(cx+12)+'px';
+        ghost.style.top =(cy-16)+'px';
+        const dzs=document.querySelectorAll('.pos-drop-zone');
+        dzs.forEach(dz=>dz.classList.remove('drag-over'));
+        const hit=getDropZoneUnder(cx,cy);
+        if(hit) hit.classList.add('drag-over');
+    }
+    function end(cx,cy){
+        if(ghost){ ghost.remove(); ghost=null; }
+        document.querySelectorAll('.pos-drop-zone').forEach(dz=>dz.classList.remove('drag-over'));
+        if(moved){
+            const hit=getDropZoneUnder(cx,cy);
+            if(hit) dropOnZone(hit.dataset.pos, playerId, null);
+        } else {
+            openProfile(playerId);
+        }
+        dragInfo=null;
+        renderAll();
+    }
+
+    el.addEventListener('mousedown',e=>{
+        if(e.button!==0) return; e.preventDefault();
+        begin(e.clientX,e.clientY);
+        const mm=ev=>move(ev.clientX,ev.clientY);
+        const mu=ev=>{ document.removeEventListener('mousemove',mm); document.removeEventListener('mouseup',mu); end(ev.clientX,ev.clientY); };
+        document.addEventListener('mousemove',mm);
+        document.addEventListener('mouseup',mu);
+    });
+    el.addEventListener('touchstart',e=>{
+        const t=e.touches[0]; begin(t.clientX,t.clientY);
+        const tm=ev=>{ ev.preventDefault(); const tt=ev.touches[0]; move(tt.clientX,tt.clientY); };
+        const te=ev=>{ const tt=ev.changedTouches[0]; end(tt.clientX,tt.clientY); document.removeEventListener('touchmove',tm); document.removeEventListener('touchend',te); };
+        document.addEventListener('touchmove',tm,{passive:false});
+        document.addEventListener('touchend',te);
+    });
+}
+
+function setupDropZone(el){
+    el.addEventListener('mouseenter',()=>{ if(dragInfo) el.classList.add('drag-over'); });
+    el.addEventListener('mouseleave',()=>el.classList.remove('drag-over'));
+    el.addEventListener('mouseup',()=>{
+        el.classList.remove('drag-over');
+        if(dragInfo){ dropOnZone(el.dataset.pos, dragInfo.playerId, dragInfo.fromPos); renderAll(); }
+    });
+}
+
+function getDropZoneUnder(cx,cy){
+    const dzs=document.querySelectorAll('.pos-drop-zone');
+    for(const dz of dzs){
+        const r=dz.getBoundingClientRect();
+        const mx=r.left+r.width/2, my=r.top+r.height/2;
+        // Use the zone's own rendered radius (half its width) as hit target
+        const hitR = r.width / 2;
+        if(Math.hypot(cx-mx,cy-my) < hitR) return dz;
+    }
+    return null;
+}
+
+function dropOnZone(targetPos, playerId, fromPos){
+    // Check if target is occupied
+    const existing = lineup[currentInning][targetPos];
+    saveUndo();
+    if(fromPos){
+        // Swap if target occupied
+        if(existing && existing!==playerId){
+            lineup[currentInning][fromPos]=existing;
+        } else {
+            lineup[currentInning][fromPos]=null;
+        }
+    } else {
+        // From panel — if target occupied, just swap
+        if(existing){
+            // Remove player from any current pos
+            const curPos=currentPosOf(playerId);
+            if(curPos) lineup[currentInning][curPos]=null;
+            // existing stays (just gets overwritten below)
+        }
+    }
+    lineup[currentInning][targetPos]=playerId;
+}
+
+// ═══════════════════════════════════════════════
+//  SCHEDULE  (edit this to update your schedule)
+//  Format: { date: "YYYY-MM-DD", opponent: "Name" }
+//  Today's date auto-selects the next upcoming game.
+// ═══════════════════════════════════════════════
+const SCHEDULE = [
+    { date:"2026-03-15", opponent:"Mudcats" },
+    { date:"2026-03-22", opponent:"Indians" },
+    { date:"2026-03-29", opponent:"Tigers" },
+    { date:"2026-04-05", opponent:"Cardinals" },
+    { date:"2026-04-12", opponent:"Marlins" },
+];
+
+function initSchedule(){
+    const now = new Date();
+    // Strip time — compare date only
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // Format today's date for display
+    const dateStr = today.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    document.getElementById('todayDate').textContent = dateStr;
+
+    // Find next game: earliest game whose date >= today
+    const sorted = [...SCHEDULE].sort((a,b)=>a.date.localeCompare(b.date));
+    let next = null;
+    for(const game of sorted){
+        const [y,m,d] = game.date.split('-').map(Number);
+        const gd = new Date(y, m-1, d);
+        if(gd >= today){ next = game; break; }
+    }
+    document.getElementById('opponentName').textContent = next ? next.opponent : 'No upcoming games';
+}
+
+// ═══════════════════════════════════════════════
+//  PROFILE MODAL  (editable)
+// ═══════════════════════════════════════════════
+let profilePlayerId = null; // currently open player
+
+function openProfile(playerId){
+    const player = getPlayer(playerId);
+    if(!player) return;
+    profilePlayerId = playerId;
+    const color = playerColor(player);
+    const modal = document.getElementById('modal');
+    modal.style.setProperty('--color', color);
+
+    document.getElementById('mNum').textContent  = `#${player.number}`;
+    document.getElementById('mName').textContent = player.name;
+    document.getElementById('mBadge').textContent       = player.level;
+    document.getElementById('mBadge').style.background  = color;
+
+    // ── POSITION CHECKBOXES ──────────────────────────────────────────
+    // All 9 positions shown as toggleable pills.
+    // Selected ones shown in order (rank badge). Click to toggle.
+    renderPosCheckboxes(player);
+
+    // ── INNING ASSIGNMENTS ───────────────────────────────────────────
+    renderInningDropdowns(player);
+
+    document.getElementById('profileOverlay').style.display = 'flex';
+}
+
+function renderPosCheckboxes(player){
+    const wrap = document.getElementById('mPosCheckboxes');
+    wrap.innerHTML = '';
+    // player.positions is the ordered preference list
+    for(const pos of POS_KEYS){
+        const idx = player.positions.indexOf(pos);
+        const selected = idx !== -1;
+        const pill = document.createElement('div');
+        pill.className = 'pos-checkbox' + (selected ? ' selected' : '');
+        pill.dataset.pos = pos;
+        pill.innerHTML = `<span class="pos-rank">${selected ? idx+1 : ''}</span>${pos}`;
+        pill.addEventListener('click', () => togglePosCheckbox(pos, player));
+        wrap.appendChild(pill);
+    }
+}
+
+function togglePosCheckbox(pos, player){
+    const idx = player.positions.indexOf(pos);
+    if(idx === -1){
+        player.positions.push(pos); // add to end
+    } else {
+        player.positions.splice(idx, 1); // remove
+    }
+    renderPosCheckboxes(player);
+    renderInningDropdowns(player);
+}
+
+function renderInningDropdowns(player){
+    const innEl = document.getElementById('mInnings');
+    innEl.innerHTML = '';
+    for(const inn of INNINGS){
+        const currentPos = POS_KEYS.find(p => lineup[inn][p] === player.id) || '';
+        const row = document.createElement('div');
+        row.className = 'modal-inning-row';
+
+        const label = document.createElement('span');
+        label.className = 'modal-inning-label';
+        label.textContent = `Inning ${inn}`;
+
+        const sel = document.createElement('select');
+        sel.className = 'inning-pos-select';
+        sel.dataset.inning = inn;
+
+        // Options: blank (bench) + all 9 positions
+        const blankOpt = document.createElement('option');
+        blankOpt.value = '';
+        blankOpt.textContent = '— Bench —';
+        sel.appendChild(blankOpt);
+
+        for(const pos of POS_KEYS){
+            const opt = document.createElement('option');
+            opt.value = pos;
+            opt.textContent = pos;
+            if(pos === currentPos) opt.selected = true;
+            sel.appendChild(opt);
+        }
+
+        sel.addEventListener('change', () => {
+            applyInningAssignment(player.id, inn, sel.value || null);
+            renderInningDropdowns(player); // refresh all dropdowns to reflect swaps
+        });
+
+        row.appendChild(label);
+        row.appendChild(sel);
+        innEl.appendChild(row);
+    }
+}
+
+function applyInningAssignment(playerId, inning, newPos){
+    saveUndo();
+    // Remove player from any current position in this inning
+    for(const p of POS_KEYS){
+        if(lineup[inning][p] === playerId) lineup[inning][p] = null;
+    }
+    if(newPos){
+        // If someone else is at the target position, bump them off (not swap)
+        lineup[inning][newPos] = null;
+        lineup[inning][newPos] = playerId;
+    }
+    renderAll();
+}
+
+document.getElementById('mSaveBtn').addEventListener('click', () => {
+    document.getElementById('profileOverlay').style.display = 'none';
+    renderAll();
+    showToast('Player profile saved ✓');
+});
+
+document.getElementById('profileClose').addEventListener('click',()=>{
+    document.getElementById('profileOverlay').style.display='none';
+    renderAll();
+});
+document.getElementById('profileOverlay').addEventListener('click',e=>{
+    if(e.target===document.getElementById('profileOverlay')){
+        document.getElementById('profileOverlay').style.display='none';
+        renderAll();
+    }
+});
+
+// ═══════════════════════════════════════════════
+//  AVAILABILITY MODAL
+// ═══════════════════════════════════════════════
+function openAvailability(){
+    const grid=document.getElementById('availGrid');
+    grid.innerHTML='';
+
+    const sorted=[...ROSTER].sort((a,b)=>LEVEL_ORDER.indexOf(a.level)-LEVEL_ORDER.indexOf(b.level));
+    for(const player of sorted){
+        const isAvail=availablePlayers.has(player.id);
+        const color=playerColor(player);
+        const item=document.createElement('div');
+        item.className='avail-item'+(isAvail?' checked':'');
+        item.style.setProperty('--color',color);
+        item.dataset.pid=player.id;
+        item.innerHTML=`
+            <div class="avail-check"></div>
+            <div>
+                <div class="avail-name">${player.name}</div>
+                <div class="avail-num">#${player.number} · ${player.level}</div>
+            </div>
+        `;
+        item.addEventListener('click',()=>{
+            item.classList.toggle('checked');
+        });
+        grid.appendChild(item);
+    }
+    document.getElementById('modalOverlay').classList.add('open');
+}
+
+document.getElementById('availBtn').addEventListener('click', openAvailability);
+document.getElementById('availClose').addEventListener('click',()=>document.getElementById('modalOverlay').classList.remove('open'));
+document.getElementById('modalOverlay').addEventListener('click',e=>{
+    if(e.target===document.getElementById('modalOverlay'))
+        document.getElementById('modalOverlay').classList.remove('open');
+});
+
+document.getElementById('selectAll').addEventListener('click',()=>{
+    document.querySelectorAll('.avail-item').forEach(i=>i.classList.add('checked'));
+});
+document.getElementById('selectNone').addEventListener('click',()=>{
+    document.querySelectorAll('.avail-item').forEach(i=>i.classList.remove('checked'));
+});
+document.getElementById('confirmAvail').addEventListener('click',()=>{
+    availablePlayers.clear();
+    document.querySelectorAll('.avail-item.checked').forEach(i=>availablePlayers.add(Number(i.dataset.pid)));
+    document.getElementById('modalOverlay').classList.remove('open');
+    renderAll();
+    showToast(`${availablePlayers.size} players available`);
+});
+
+// ═══════════════════════════════════════════════
+//  CONTROLS  — wired for both desktop & mobile
+// ═══════════════════════════════════════════════
+
+// ── Inning select label sync ────────────────────
+// On narrow screens (hamburger mode), the desktop select shows just "1"–"7"
+// On wider screens it shows "Inning 1"–"Inning 7"
+function syncInningLabels(){
+    const narrow = window.innerWidth <= 560;
+    const sel = document.getElementById('inningSelect');
+    for(let i = 0; i < sel.options.length; i++){
+        const val = sel.options[i].value;
+        sel.options[i].text = narrow ? val : `Inning ${val}`;
+    }
+}
+
+// ── Shared actions ─────────────────────────────
+function doUndo(){
+    if(!undoStack.length) return;
+    redoStack.push(deepCloneLineup(lineup));
+    lineup = undoStack.pop();
+    updateUndoRedoBtns();
+    renderAll();
+    showToast('Undone');
+}
+function doRedo(){
+    if(!redoStack.length) return;
+    undoStack.push(deepCloneLineup(lineup));
+    lineup = redoStack.pop();
+    updateUndoRedoBtns();
+    renderAll();
+    showToast('Redone');
+}
+function doClear(){
+    saveUndo();
+    POS_KEYS.forEach(p => lineup[currentInning][p] = null);
+    renderAll();
+    showToast('Inning cleared');
+}
+function doSetInning(val){
+    currentInning = Number(val);
+    // Keep both selects in sync
+    document.getElementById('inningSelect').value       = val;
+    document.getElementById('inningSelectMobile').value = val;
+    renderAll();
+}
+
+// ── Desktop controls ───────────────────────────
+document.getElementById('inningSelect').addEventListener('change', function(){ doSetInning(this.value); });
+document.getElementById('generateBtn').addEventListener('click', generateLineup);
+document.getElementById('clearBtn').addEventListener('click', doClear);
+document.getElementById('undoBtn').addEventListener('click', doUndo);
+document.getElementById('redoBtn').addEventListener('click', doRedo);
+
+// ── Mobile menu controls ────────────────────────
+document.getElementById('inningSelectMobile').addEventListener('change', function(){ doSetInning(this.value); });
+document.getElementById('generateBtnM').addEventListener('click', ()=>{ closeMenu(); generateLineup(); });
+document.getElementById('clearBtnM').addEventListener('click',    ()=>{ closeMenu(); doClear(); });
+document.getElementById('undoBtnM').addEventListener('click',     ()=>{ closeMenu(); doUndo(); });
+document.getElementById('redoBtnM').addEventListener('click',     ()=>{ closeMenu(); doRedo(); });
+document.getElementById('availBtnM').addEventListener('click',    ()=>{ closeMenu(); openAvailability(); });
+document.getElementById('panelBtnM').addEventListener('click',    ()=>{ closeMenu(); togglePanel(); });
+
+// ── Hamburger menu open/close ───────────────────
+function closeMenu(){
+    document.getElementById('overflowMenu').classList.remove('open');
+}
+document.getElementById('menuBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    document.getElementById('overflowMenu').classList.toggle('open');
+});
+// Close menu on outside click
+document.addEventListener('click', e => {
+    const menu = document.getElementById('overflowMenu');
+    if(menu.classList.contains('open') && !menu.contains(e.target)){
+        closeMenu();
+    }
+});
+
+// Keep undo/redo button states in sync across both bars
+const _origUpdateUndoRedo = updateUndoRedoBtns;
+function updateUndoRedoBtns(){
+    const hasUndo = undoStack.length > 0;
+    const hasRedo = redoStack.length > 0;
+    document.getElementById('undoBtn').disabled  = !hasUndo;
+    document.getElementById('redoBtn').disabled  = !hasRedo;
+    document.getElementById('undoBtnM').disabled = !hasUndo;
+    document.getElementById('redoBtnM').disabled = !hasRedo;
+}
+
+// ── Panel toggle ────────────────────────────────
+function togglePanel(open){
+    const panel = document.getElementById('sidePanel');
+    if(open === undefined) open = panel.classList.contains('collapsed');
+    if(open) panel.classList.remove('collapsed');
+    else     panel.classList.add('collapsed');
+}
+document.getElementById('panelToggleBtn').addEventListener('click', ()=>togglePanel());
+document.getElementById('panelCloseBtn').addEventListener('click',  ()=>togglePanel(false));
+
+// ── Rerender on resize ──────────────────────────
+let resizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { syncInningLabels(); renderAll(); }, 80);
+});
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+initSchedule();
+syncInningLabels();
+renderAll();
+</script>
+</body>
+</html>
