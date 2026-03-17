@@ -167,25 +167,31 @@
 
         /* ── RESPONSIVE BREAKPOINTS ── */
 
-        /* Medium screens: hide text labels on some buttons */
-        @media (max-width: 780px) {
+        /* ── RESPONSIVE BREAKPOINTS ── */
+
+        /* Medium: hide button text, keep icons */
+        @media (max-width: 900px) {
             .tb-hide-md { display: none !important; }
-            #topbar { gap: 6px; }
+            #topbar { gap: 5px; }
         }
 
-        /* Narrow screens: collapse secondary buttons into hamburger */
-        @media (max-width: 560px) {
+        /* Narrow: hide game chips stack, shrink further */
+        @media (max-width: 680px) {
+            #gameChipsStack { display: none !important; }
+            #topbar { gap: 4px; padding: 0 8px; }
+        }
+
+        /* Very narrow: collapse secondary actions into hamburger */
+        @media (max-width: 500px) {
             #menuBtn { display: flex; }
             .tb-overflow { display: none !important; }
-            .tb-divider.tb-overflow { display: none !important; }
-            #topbar { gap: 5px; padding: 0 10px; }
-            #topbar .brand { font-size: 17px; }
+            #topbar { gap: 4px; padding: 0 8px; }
+            #topbar .brand { font-size: 16px; }
         }
 
-        /* Very narrow: hide date/opponent too */
-        @media (max-width: 380px) {
+        /* Tiny: hide game info block too */
+        @media (max-width: 340px) {
             #topbarGameInfo { display: none !important; }
-            .tb-divider:first-of-type { display: none !important; }
         }
 
         /* ── MAIN LAYOUT ── */
@@ -195,16 +201,26 @@
             margin-top: var(--topbar-h);
         }
 
-        /* ── FIELD ── */
+        /* ── FIELD WRAP: pannable viewport ── */
         #fieldWrap {
             flex: 1;
             position: relative;
             overflow: hidden;
+            touch-action: none;
+            cursor: grab;
+        }
+        #fieldWrap:active { cursor: grabbing; }
+
+        /* fieldCanvas: the pannable/zoomable surface */
+        #fieldCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            transform-origin: top left;
+            will-change: transform;
         }
 
         #fieldSvg {
-            width: 100%;
-            height: 100%;
+            display: block;
         }
 
         /* ── PLAYER BUBBLES OVERLAY ── */
@@ -213,6 +229,128 @@
             inset: 0;
             pointer-events: none;
         }
+
+        /* ── EMPTY SLOT BUBBLE ── */
+        .empty-bubble {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            pointer-events: all;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 8;
+        }
+        .empty-bubble-ring {
+            border-radius: 8px;
+            border: 2px dashed rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.03);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: border-color .2s, background .2s;
+        }
+        .empty-bubble:hover .empty-bubble-ring {
+            border-color: rgba(0,213,255,0.55);
+            background: rgba(0,213,255,0.08);
+        }
+        .empty-bubble-pos {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            color: rgba(255,255,255,0.28);
+            letter-spacing: 1px;
+        }
+        .empty-bubble-icon {
+            color: rgba(255,255,255,0.18);
+            line-height: 1;
+        }
+
+        /* ── PLAYER PICKER POPUP ── */
+        #playerPicker {
+            position: fixed;
+            z-index: 700;
+            background: rgba(4,10,20,0.97);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            min-width: 190px;
+            max-width: 250px;
+            max-height: 340px;
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.85);
+            backdrop-filter: blur(16px);
+            overflow-y: auto;
+        }
+        #playerPicker.open { display: flex; }
+        #playerPicker::-webkit-scrollbar { width:3px; }
+        #playerPicker::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+        .picker-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .picker-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 11px; font-weight: 700; letter-spacing: 2px;
+            color: var(--primary); text-transform: uppercase;
+        }
+        .picker-close {
+            background: none; border: none; color: var(--muted);
+            cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px;
+        }
+        .picker-close:hover { color: #fff; }
+        .picker-card {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--color, var(--primary));
+            border-radius: 7px;
+            padding: 6px 10px;
+            cursor: pointer;
+            transition: background .15s;
+            flex-shrink: 0;
+        }
+        .picker-card:hover { background: rgba(255,255,255,0.1); }
+        .picker-num {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 12px; font-weight: 700;
+            color: var(--color, var(--primary));
+            min-width: 20px; text-align: center;
+        }
+        .picker-info { flex: 1; min-width: 0; }
+        .picker-name {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 14px; font-weight: 700; color: #fff;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .picker-pos { font-size: 10px; color: var(--muted); }
+        .picker-none {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 13px; color: var(--muted);
+            text-align: center; padding: 8px 0;
+        }
+
+        /* Pan hint — shown briefly on first load on touch devices */
+        #panHint {
+            position: absolute;
+            bottom: 16px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.65);
+            color: rgba(255,255,255,0.7);
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 12px; letter-spacing: 1px;
+            padding: 5px 14px; border-radius: 20px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity .4s;
+            z-index: 50;
+            white-space: nowrap;
+        }
+        #panHint.show { opacity: 1; }
 
         .bubble {
             position: absolute;
@@ -609,9 +747,16 @@
             background:rgba(255,255,255,0.05);
             border:1px solid rgba(255,255,255,0.1);
         }
-        /* hide chips on medium screens, collapse into game info block */
+        /* Stack location above time */
+        #gameChipsStack {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex-shrink: 0;
+        }
+        /* hide chips on medium/narrow screens */
         @media (max-width:780px) {
-            .game-chip { display:none; }
+            #gameChipsStack { display: none; }
         }
 
         /* ── TOAST ── */
@@ -633,8 +778,13 @@
         @media (max-width:640px) {
             #topbar .brand { font-size:16px; }
             .tb-label { display:none; }
-            #sidePanel { position:fixed; right:0; top:56px; bottom:0; z-index:150; }
-            #togglePanel { top:calc(56px + 40px); }
+            /* Side panel slides in over the field on mobile */
+            #sidePanel {
+                position: fixed;
+                right: 0; top: var(--topbar-h); bottom: 0;
+                z-index: 150;
+                box-shadow: -8px 0 32px rgba(0,0,0,0.6);
+            }
             .avail-grid { grid-template-columns:1fr; }
         }
 
@@ -683,14 +833,16 @@
         </span>
     </div>
 
-    <!-- Location + Time chips (horizontal, hidden on medium/narrow) -->
-    <div id="gameChipLocation" class="game-chip home" style="display:none;">
-        <i class="fas fa-circle" style="font-size:7px;"></i>
-        <span id="chipLocation">—</span>
-    </div>
-    <div id="gameChipTime" class="game-chip time" style="display:none;">
-        <i class="fas fa-clock" style="font-size:9px;"></i>
-        <span id="chipTime">—</span>
+    <!-- Location + Time chips (vertical stack, hidden on medium/narrow) -->
+    <div id="gameChipsStack">
+        <div id="gameChipLocation" class="game-chip home" style="display:none;">
+            <i class="fas fa-circle" style="font-size:7px;"></i>
+            <span id="chipLocation">—</span>
+        </div>
+        <div id="gameChipTime" class="game-chip time" style="display:none;">
+            <i class="fas fa-clock" style="font-size:9px;"></i>
+            <span id="chipTime">—</span>
+        </div>
     </div>
 
     <div class="tb-divider"></div>
@@ -780,6 +932,7 @@
 
     <!-- FIELD -->
     <div id="fieldWrap">
+      <div id="fieldCanvas">
         <svg id="fieldSvg" viewBox="0 0 900 900" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
             <!--
               2.2px/ft  ViewBox 900x900
@@ -964,6 +1117,9 @@
 
         <!-- Drop zones & Bubbles layer -->
         <div id="bubblesLayer"></div>
+      </div><!-- /fieldCanvas -->
+      <!-- Pan hint -->
+      <div id="panHint"><i class="fas fa-hand-pointer"></i> Drag to pan field</div>
     </div>
 
     <!-- SIDE PANEL -->
@@ -1017,6 +1173,9 @@
         <div class="modal-inning-list" id="mInnings"></div>
     </div>
 </div>
+
+<!-- PLAYER PICKER POPUP -->
+<div id="playerPicker"></div>
 
 <!-- TOAST -->
 <div id="toast"></div>
@@ -1102,44 +1261,145 @@ const FIELD_COORDS_SVG = {
 const FIELD_SVG_W = 900;
 const FIELD_SVG_H = 900;
 
+// ═══════════════════════════════════════════════
+//  PAN STATE
+// ═══════════════════════════════════════════════
+let panX = 0, panY = 0;  // current pan offset in canvas pixels
+let fieldScale = 1;       // current canvas scale (set in applyFieldLayout)
+
 /**
- * Core SVG→screen transform for xMidYMid meet.
- * Returns { x, y, scale } for any raw SVG coordinate.
- * All bubble/dropzone placement flows through this.
+ * Compute how the SVG fits into fieldWrap (xMidYMid meet),
+ * then size the canvas to exactly the rendered SVG size.
+ * Called on every resize and on init.
  */
-function svgTransform() {
+function applyFieldLayout() {
+    const wrap   = document.getElementById('fieldWrap');
+    const canvas = document.getElementById('fieldCanvas');
+    const svg    = document.getElementById('fieldSvg');
+    const wrapW  = wrap.offsetWidth;
+    const wrapH  = wrap.offsetHeight;
+
+    // Scale SVG to fill the wrap (meet = fit inside, keeping aspect ratio)
+    fieldScale = Math.min(wrapW / FIELD_SVG_W, wrapH / FIELD_SVG_H);
+
+    const rendW = FIELD_SVG_W * fieldScale;
+    const rendH = FIELD_SVG_H * fieldScale;
+
+    // Size SVG and canvas to the rendered dimensions
+    svg.style.width  = rendW + 'px';
+    svg.style.height = rendH + 'px';
+    canvas.style.width  = rendW + 'px';
+    canvas.style.height = rendH + 'px';
+
+    // Clamp pan so field never leaves the wrap
+    clampPan(wrapW, wrapH, rendW, rendH);
+    applyPan();
+}
+
+function clampPan(wrapW, wrapH, rendW, rendH) {
     const wrap = document.getElementById('fieldWrap');
-    const wrapW = wrap.offsetWidth;
-    const wrapH = wrap.offsetHeight;
-    const scale = Math.min(wrapW / FIELD_SVG_W, wrapH / FIELD_SVG_H);
-    const rendW = FIELD_SVG_W * scale;
-    const rendH = FIELD_SVG_H * scale;
+    const w = wrapW  || wrap.offsetWidth;
+    const h = wrapH  || wrap.offsetHeight;
+    const rW = rendW || FIELD_SVG_W * fieldScale;
+    const rH = rendH || FIELD_SVG_H * fieldScale;
+    // Allow panning only as far as the canvas edge reaches the wrap edge
+    const minX = Math.min(0, w - rW);
+    const minY = Math.min(0, h - rH);
+    panX = Math.max(minX, Math.min(0, panX));
+    panY = Math.max(minY, Math.min(0, panY));
+}
+
+function applyPan() {
+    const canvas = document.getElementById('fieldCanvas');
+    canvas.style.transform = `translate(${panX}px, ${panY}px)`;
+    // Re-render bubbles so they follow the pan
+    renderBubbles();
+}
+
+/**
+ * Convert raw SVG coordinates to screen pixels,
+ * accounting for current fieldScale and pan offset.
+ */
+function svgToScreen(svgX, svgY) {
     return {
-        scale,
-        offX: (wrapW - rendW) / 2,
-        offY: (wrapH - rendH) / 2,
+        x: panX + svgX * fieldScale,
+        y: panY + svgY * fieldScale,
     };
 }
 
-function svgToScreen(svgX, svgY) {
-    const t = svgTransform();
-    return { x: t.offX + svgX * t.scale, y: t.offY + svgY * t.scale };
+function svgTransform() {
+    return { scale: fieldScale, offX: panX, offY: panY };
 }
 
-// Named landmark lookup (still available for future use)
 function getFieldPixels(key) {
     const coord = FIELD_COORDS_SVG[key];
     if (!coord) return null;
     return svgToScreen(coord.x, coord.y);
 }
 
-/**
- * Scale a font/size value proportionally to the current SVG render scale.
- * baseSize is the size at scale=1 (900px wide field).
- */
 function scaledSize(baseSize) {
-    return Math.round(baseSize * svgTransform().scale);
+    return Math.round(baseSize * fieldScale);
 }
+
+// ═══════════════════════════════════════════════
+//  PAN GESTURE HANDLING
+// ═══════════════════════════════════════════════
+(function initPan() {
+    const wrap = document.getElementById('fieldWrap');
+
+    // ── Mouse drag ───────────────────────────────
+    let mdStart = null;
+    wrap.addEventListener('mousedown', e => {
+        // Only pan on left-click on the background (not on bubbles/dropzones)
+        if (e.target.closest('.bubble, .pos-drop-zone, .empty-bubble')) return;
+        mdStart = { x: e.clientX - panX, y: e.clientY - panY };
+        wrap.style.cursor = 'grabbing';
+    });
+    document.addEventListener('mousemove', e => {
+        if (!mdStart) return;
+        panX = e.clientX - mdStart.x;
+        panY = e.clientY - mdStart.y;
+        clampPan();
+        applyPan();
+    });
+    document.addEventListener('mouseup', () => {
+        mdStart = null;
+        wrap.style.cursor = '';
+    });
+
+    // ── Touch drag (single finger = pan, ignore multi-touch) ─────────
+    let touchStart = null;
+    wrap.addEventListener('touchstart', e => {
+        if (e.touches.length !== 1) return;
+        // Don't pan when touching a bubble or empty slot
+        if (e.target.closest('.bubble, .pos-drop-zone, .empty-bubble')) return;
+        const t = e.touches[0];
+        touchStart = { x: t.clientX - panX, y: t.clientY - panY };
+    }, { passive: true });
+
+    wrap.addEventListener('touchmove', e => {
+        if (!touchStart || e.touches.length !== 1) return;
+        e.preventDefault();
+        const t = e.touches[0];
+        panX = t.clientX - touchStart.x;
+        panY = t.clientY - touchStart.y;
+        clampPan();
+        applyPan();
+    }, { passive: false });
+
+    wrap.addEventListener('touchend', () => { touchStart = null; });
+    wrap.addEventListener('touchcancel', () => { touchStart = null; });
+
+    // Show pan hint briefly on first touch
+    let hintShown = false;
+    wrap.addEventListener('touchstart', () => {
+        if (hintShown) return;
+        hintShown = true;
+        const hint = document.getElementById('panHint');
+        hint.classList.add('show');
+        setTimeout(() => hint.classList.remove('show'), 2500);
+    }, { once: true, passive: true });
+})();
 
 const LEVEL_COLOR = {
     "Starter":      "var(--starter)",
@@ -1407,28 +1667,19 @@ function renderBubbles(){
     const layer = document.getElementById('bubblesLayer');
     layer.innerHTML = '';
 
-    // Get the current SVG→screen transform once (shared by all bubbles)
-    const t = svgTransform();
-
-    // Bubble scale: at full 900px field, bubbles are "natural" CSS size.
-    // We scale font sizes and padding proportionally so bubbles shrink
-    // gracefully on small screens and grow on large ones.
-    // "natural" scale = when SVG fills a ~900px wide container.
-    const s = t.scale; // e.g. 0.5 on a 450px wide container
+    const s = Math.max(0.3, Math.min(1.6, fieldScale));
 
     for(const posKey of POS_KEYS){
-        const posData = POSITIONS[posKey];
-        const screen  = svgToScreen(posData.svgX, posData.svgY);
-
+        const posData  = POSITIONS[posKey];
+        const screen   = svgToScreen(posData.svgX, posData.svgY);
         const playerId = lineup[currentInning][posKey];
 
-        // ── DROP ZONE (invisible hit target) ──────────────────────
+        // ── DROP ZONE ─────────────────────────────────────────────
         const dz = document.createElement('div');
-        dz.className = 'pos-drop-zone';
-        dz.style.left = `${screen.x}px`;
-        dz.style.top  = `${screen.y}px`;
-        // Scale drop zone hit radius with field
-        const dzSize = Math.max(44, Math.round(80 * s));
+        dz.className    = 'pos-drop-zone';
+        dz.style.left   = `${screen.x}px`;
+        dz.style.top    = `${screen.y}px`;
+        const dzSize    = Math.max(44, Math.round(80 * s));
         dz.style.width  = `${dzSize}px`;
         dz.style.height = `${dzSize}px`;
         dz.dataset.pos  = posKey;
@@ -1438,11 +1689,45 @@ function renderBubbles(){
         if(playerId){
             const player = getPlayer(playerId);
             if(!player) continue;
-            const color  = playerColor(player);
-            const bubble = createBubble(player, posKey, screen.x, screen.y, color, s);
+            const bubble = createBubble(player, posKey, screen.x, screen.y, playerColor(player), s);
             layer.appendChild(bubble);
+        } else {
+            // ── EMPTY SLOT BUBBLE ────────────────────────────────
+            const eb = createEmptyBubble(posKey, screen.x, screen.y, s);
+            layer.appendChild(eb);
         }
     }
+}
+
+function createEmptyBubble(posKey, x, y, scale){
+    const s   = Math.max(0.3, Math.min(1.6, scale));
+    const pad = `${Math.round(4*s)}px ${Math.round(9*s)}px`;
+    const r   = `${Math.round(8*s)}px`;
+    const posSz = `${Math.round(11*s)}px`;
+    const iconSz = `${Math.round(9*s)}px`;
+    const minW = `${Math.round(54*s)}px`;
+
+    const el = document.createElement('div');
+    el.className      = 'empty-bubble';
+    el.style.left     = `${x}px`;
+    el.style.top      = `${y}px`;
+    el.dataset.pos    = posKey;
+    el.innerHTML = `
+        <div class="empty-bubble-ring" style="padding:${pad};border-radius:${r};min-width:${minW};">
+            <div class="empty-bubble-icon" style="font-size:${iconSz}">＋</div>
+            <div class="empty-bubble-pos"  style="font-size:${posSz}">${posKey}</div>
+        </div>`;
+
+    el.addEventListener('click', e => {
+        e.stopPropagation();
+        openPlayerPicker(posKey, x, y);
+    });
+    el.addEventListener('touchend', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        openPlayerPicker(posKey, x, y);
+    });
+    return el;
 }
 
 function createBubble(player, posKey, x, y, color, scale){
@@ -2122,6 +2407,117 @@ document.getElementById('confirmAvail').addEventListener('click',()=>{
 });
 
 // ═══════════════════════════════════════════════
+//  PLAYER PICKER
+// ═══════════════════════════════════════════════
+let pickerPos = null; // position key the picker is currently targeting
+
+function openPlayerPicker(posKey, screenX, screenY) {
+    pickerPos = posKey;
+    const picker = document.getElementById('playerPicker');
+    const wrap   = document.getElementById('fieldWrap');
+    const wRect  = wrap.getBoundingClientRect();
+
+    // Build content
+    picker.innerHTML = '';
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.className = 'picker-header';
+    hdr.innerHTML = `
+        <span class="picker-title">${POSITIONS[posKey].label}</span>
+        <button class="picker-close" onclick="closePlayerPicker()">✕</button>`;
+    picker.appendChild(hdr);
+
+    // Eligible bench players: available, not on field this inning, prefer this position
+    const onField = new Set(Object.values(lineup[currentInning]).filter(Boolean));
+    const eligible = [...availablePlayers]
+        .map(id => getPlayer(id))
+        .filter(p => p && !onField.has(p.id) && p.positions.includes(posKey))
+        .sort((a,b) => {
+            const pa = a.positions.indexOf(posKey);
+            const pb = b.positions.indexOf(posKey);
+            if(pa !== pb) return pa - pb;
+            return LEVEL_ORDER.indexOf(a.level) - LEVEL_ORDER.indexOf(b.level);
+        });
+
+    // Also include players already on field who play this pos (for swapping)
+    const onFieldEligible = [...availablePlayers]
+        .map(id => getPlayer(id))
+        .filter(p => p && onField.has(p.id) && p.positions.includes(posKey) &&
+                     lineup[currentInning][posKey] !== p.id);
+
+    const all = [...eligible, ...onFieldEligible];
+
+    if(all.length === 0){
+        const none = document.createElement('div');
+        none.className = 'picker-none';
+        none.textContent = 'No eligible players';
+        picker.appendChild(none);
+    } else {
+        for(const player of all){
+            const color = playerColor(player);
+            const card  = document.createElement('div');
+            card.className = 'picker-card';
+            card.style.setProperty('--color', color);
+            const onF = onField.has(player.id);
+            card.innerHTML = `
+                <div class="picker-num">#${player.number}</div>
+                <div class="picker-info">
+                    <div class="picker-name">${player.name}</div>
+                    <div class="picker-pos">${player.positions.join(' · ')}${onF ? ' · <span style="color:'+color+'">on field</span>':''}</div>
+                </div>`;
+            card.addEventListener('click', () => {
+                assignFromPicker(player.id, posKey);
+                closePlayerPicker();
+            });
+            picker.appendChild(card);
+        }
+    }
+
+    picker.classList.add('open');
+
+    // Position the popup near the tapped bubble but keep it on screen
+    const pw = 250, ph = 340;
+    // Convert canvas-relative coords to viewport coords
+    const vx = wRect.left + screenX;
+    const vy = wRect.top  + screenY;
+    let left = vx + 14;
+    let top  = vy - 20;
+    if(left + pw > window.innerWidth - 8)  left = vx - pw - 14;
+    if(top  + ph > window.innerHeight - 8) top  = window.innerHeight - ph - 8;
+    if(top < 60) top = 60;
+    if(left < 8) left = 8;
+    picker.style.left = left + 'px';
+    picker.style.top  = top  + 'px';
+}
+
+function closePlayerPicker(){
+    document.getElementById('playerPicker').classList.remove('open');
+    pickerPos = null;
+}
+
+function assignFromPicker(playerId, posKey){
+    saveUndo();
+    // Remove player from any current position this inning
+    for(const p of POS_KEYS){
+        if(lineup[currentInning][p] === playerId) lineup[currentInning][p] = null;
+    }
+    // Clear target position first
+    lineup[currentInning][posKey] = null;
+    lineup[currentInning][posKey] = playerId;
+    renderAll();
+}
+
+// Close picker on outside click/tap
+document.addEventListener('click', e => {
+    const picker = document.getElementById('playerPicker');
+    if(picker.classList.contains('open') && !picker.contains(e.target) &&
+       !e.target.closest('.empty-bubble')){
+        closePlayerPicker();
+    }
+});
+
+// ═══════════════════════════════════════════════
 //  CONTROLS  — wired for both desktop & mobile
 // ═══════════════════════════════════════════════
 
@@ -2227,7 +2623,14 @@ document.getElementById('panelCloseBtn').addEventListener('click',  ()=>togglePa
 let resizeTimer;
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => { syncInningLabels(); renderAll(); }, 80);
+    resizeTimer = setTimeout(() => {
+        syncInningLabels();
+        applyFieldLayout();
+        // renderAll called inside applyFieldLayout via applyPan
+    }, 80);
+});
+window.addEventListener('orientationchange', () => {
+    setTimeout(() => { applyFieldLayout(); syncInningLabels(); }, 150);
 });
 
 // ═══════════════════════════════════════════════
@@ -2235,7 +2638,11 @@ window.addEventListener('resize', () => {
 // ═══════════════════════════════════════════════
 initSchedule();
 syncInningLabels();
-renderAll();
+// Collapse side panel by default on mobile
+if(window.innerWidth <= 640) togglePanel(false);
+applyFieldLayout();
+// applyFieldLayout calls renderAll via applyPan; call initSchedule chips after layout
+initSchedule();
 </script>
 </body>
 </html>
