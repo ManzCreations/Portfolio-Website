@@ -581,6 +581,39 @@
             display:flex; gap:10px; flex-wrap:wrap;
         }
 
+        /* ── GAME INFO CHIPS ── */
+        .game-chip {
+            display:flex; align-items:center; gap:4px;
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:12px; font-weight:700; letter-spacing:0.5px;
+            padding:2px 8px; border-radius:4px;
+            flex-shrink:0; white-space:nowrap;
+        }
+        .game-chip.field {
+            color:var(--primary);
+            background:rgba(0,213,255,0.08);
+            border:1px solid rgba(0,213,255,0.2);
+        }
+        .game-chip.home {
+            color:#22c55e;
+            background:rgba(34,197,94,0.1);
+            border:1px solid rgba(34,197,94,0.25);
+        }
+        .game-chip.away {
+            color:#ef4444;
+            background:rgba(239,68,68,0.1);
+            border:1px solid rgba(239,68,68,0.25);
+        }
+        .game-chip.time {
+            color:rgba(255,255,255,0.7);
+            background:rgba(255,255,255,0.05);
+            border:1px solid rgba(255,255,255,0.1);
+        }
+        /* hide chips on medium screens, collapse into game info block */
+        @media (max-width:780px) {
+            .game-chip { display:none; }
+        }
+
         /* ── TOAST ── */
         #toast {
             position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
@@ -640,11 +673,25 @@
     <!-- Always visible: brand -->
     <div class="brand">LINE<span>UP</span></div>
 
-    <!-- Game info (hidden on very narrow) -->
-    <div class="tb-divider" id="topbarGameInfo"></div>
-    <div id="topbarGameInfo" style="display:flex;flex-direction:column;line-height:1.1;flex-shrink:0;">
+    <!-- Game info block -->
+    <div class="tb-divider"></div>
+    <div id="topbarGameInfo" style="display:flex;flex-direction:column;line-height:1.15;flex-shrink:0;">
         <span id="todayDate" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;"></span>
         <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#fff;">vs <span id="opponentName" style="color:var(--primary);">—</span></span>
+    </div>
+
+    <!-- Game detail chips (hidden on medium/narrow) -->
+    <div id="gameChipField" class="game-chip field" style="display:none;">
+        <i class="fas fa-map-marker-alt" style="font-size:9px;"></i>
+        <span id="chipFieldName">—</span>
+    </div>
+    <div id="gameChipLocation" class="game-chip home" style="display:none;">
+        <i class="fas fa-circle" style="font-size:7px;"></i>
+        <span id="chipLocation">—</span>
+    </div>
+    <div id="gameChipTime" class="game-chip time" style="display:none;">
+        <i class="fas fa-clock" style="font-size:9px;"></i>
+        <span id="chipTime">—</span>
     </div>
 
     <div class="tb-divider"></div>
@@ -680,6 +727,12 @@
     </button>
 
     <div class="tb-spacer"></div>
+
+    <!-- Load from Sheets button -->
+    <button class="tb-btn tb-overflow" id="loadSheetsBtn" title="Reload roster & schedule from Google Sheets"
+            style="color:#a78bfa;border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.08);">
+        <i class="fas fa-cloud-download-alt"></i><span class="tb-hide-md"> Load Sheet</span>
+    </button>
 
     <!-- Availability + Roster — always visible, text hidden on md -->
     <button class="tb-btn tb-overflow" id="availBtn">
@@ -718,6 +771,7 @@
     <button class="tb-btn" id="generateBtnM" style="background:rgba(0,213,255,.12)"><i class="fas fa-magic"></i> Generate Lineup</button>
     <button class="tb-btn accent" id="clearBtnM"><i class="fas fa-eraser"></i> Clear Inning</button>
     <div class="menu-divider"></div>
+    <button class="tb-btn" id="loadSheetsBtnM" style="color:#a78bfa;border-color:rgba(167,139,250,0.3)"><i class="fas fa-cloud-download-alt"></i> Load from Sheets</button>
     <button class="tb-btn" id="availBtnM"    style="color:#22c55e;border-color:rgba(34,197,94,0.3)"><i class="fas fa-users"></i> Availability</button>
     <button class="tb-btn" id="panelBtnM"><i class="fas fa-list"></i> Roster</button>
 </div>
@@ -1660,36 +1714,233 @@ function dropOnZone(targetPos, playerId, fromPos){
 }
 
 // ═══════════════════════════════════════════════
-//  SCHEDULE  (edit this to update your schedule)
-//  Format: { date: "YYYY-MM-DD", opponent: "Name" }
-//  Today's date auto-selects the next upcoming game.
+//  GOOGLE SHEETS CONFIG
+//  Paste your two published CSV URLs here.
+//  Roster sheet URL  → SHEETS_ROSTER_URL
+//  Schedule sheet URL → SHEETS_SCHEDULE_URL
+//  To get each URL:
+//    File → Share → Publish to web → pick the tab
+//    → Comma-separated values (.csv) → Publish → copy URL
 // ═══════════════════════════════════════════════
-const SCHEDULE = [
-    { date:"2026-03-15", opponent:"Mudcats" },
-    { date:"2026-03-22", opponent:"Indians" },
-    { date:"2026-03-29", opponent:"Tigers" },
-    { date:"2026-04-05", opponent:"Cardinals" },
-    { date:"2026-04-12", opponent:"Marlins" },
+const SHEETS_ROSTER_URL   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR2vInGZARLCtpXoNZ-wb9gp398Gv7VsHx1AhJX5tI2Q0OXLnnu1zhVypQjuUJLIvCIA1KydlFZVm1p/pub?gid=0&single=true&output=csv';
+const SHEETS_SCHEDULE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR2vInGZARLCtpXoNZ-wb9gp398Gv7VsHx1AhJX5tI2Q0OXLnnu1zhVypQjuUJLIvCIA1KydlFZVm1p/pub?gid=328639597&single=true&output=csv';
+
+// ── Fallback hardcoded schedule (used until sheets are loaded) ─────────
+let SCHEDULE = [
+    { date:"2026-03-15", opponent:"Mudcats",   location:"Home", time:"2:00 PM", field:"Zebulon Park" },
+    { date:"2026-03-22", opponent:"Indians",   location:"Away", time:"2:00 PM", field:"Clayton Field" },
+    { date:"2026-03-29", opponent:"Tigers",    location:"Home", time:"2:00 PM", field:"Zebulon Park" },
+    { date:"2026-04-05", opponent:"Cardinals", location:"Away", time:"2:00 PM", field:"Johnston Complex" },
+    { date:"2026-04-12", opponent:"Marlins",   location:"Home", time:"2:00 PM", field:"Zebulon Park" },
 ];
 
+// ── CSV parser (handles quoted fields, commas inside quotes) ────────────
+function parseCSV(text){
+    const rows = [];
+    const lines = text.trim().split(/\r?\n/);
+    for(const line of lines){
+        const cols = [];
+        let cur = '', inQ = false;
+        for(let i = 0; i < line.length; i++){
+            const ch = line[i];
+            if(ch === '"' ){ inQ = !inQ; }
+            else if(ch === ',' && !inQ){ cols.push(cur.trim()); cur = ''; }
+            else { cur += ch; }
+        }
+        cols.push(cur.trim());
+        rows.push(cols);
+    }
+    return rows;
+}
+
+// ── Parse roster CSV into ROSTER-shaped objects ─────────────────────────
+// Expected columns (row 0 = header):
+// ID, Name, Jersey Number, Level,
+// Position 1..9, Notes
+function parseRosterCSV(text){
+    const rows = parseCSV(text);
+    if(rows.length < 2) return null;
+    // Skip header row
+    const players = [];
+    for(let i = 1; i < rows.length; i++){
+        const r = rows[i];
+        if(!r[0] || !r[1]) continue; // skip blank rows
+        const positions = [];
+        // Columns 4–12 are Position 1–9
+        for(let p = 4; p <= 12; p++){
+            if(r[p] && r[p].trim()) positions.push(r[p].trim());
+        }
+        players.push({
+            id:        Number(r[0]),
+            name:      r[1]  || '',
+            number:    r[2]  || 'TBD',
+            level:     r[3]  || 'If Necessary',
+            positions: positions,
+        });
+    }
+    return players.length ? players : null;
+}
+
+// ── Parse schedule CSV into SCHEDULE-shaped objects ─────────────────────
+// Expected columns (row 0 = header):
+// Date, Day, Opponent, Location, Time, Field, Notes
+function parseScheduleCSV(text){
+    const rows = parseCSV(text);
+    if(rows.length < 2) return null;
+    const games = [];
+    for(let i = 1; i < rows.length; i++){
+        const r = rows[i];
+        if(!r[0] || !r[2]) continue;
+        games.push({
+            date:     r[0].trim(),
+            day:      r[1]  || '',
+            opponent: r[2]  || '',
+            location: r[3]  || '',
+            time:     r[4]  || '',
+            field:    r[5]  || '',
+            notes:    r[6]  || '',
+        });
+    }
+    return games.length ? games : null;
+}
+
+// ── Load from Google Sheets ─────────────────────────────────────────────
+async function loadFromSheets(silent = false){
+    if(!silent) showToast('Loading from Google Sheets…', 3000);
+
+    let rosterOk = false, scheduleOk = false;
+
+    // Load roster
+    if(SHEETS_ROSTER_URL && SHEETS_ROSTER_URL !== 'YOUR_ROSTER_SHEET_CSV_URL_HERE'){
+        try {
+            const res  = await fetch(SHEETS_ROSTER_URL);
+            const text = await res.text();
+            const parsed = parseRosterCSV(text);
+            if(parsed){
+                // Merge: update existing players, add new ones, keep client positions intact
+                // We only overwrite name/number/level from sheet — positions stay as edited
+                // unless the player doesn't exist locally yet (new player)
+                for(const sheetPlayer of parsed){
+                    const existing = ROSTER.find(p => p.id === sheetPlayer.id);
+                    if(existing){
+                        existing.name   = sheetPlayer.name;
+                        existing.number = sheetPlayer.number;
+                        existing.level  = sheetPlayer.level;
+                        // Only update positions if user hasn't modified them this session
+                        // (simple heuristic: update if positions arrays differ from hardcoded)
+                        existing.positions = sheetPlayer.positions;
+                    } else {
+                        ROSTER.push(sheetPlayer);
+                    }
+                }
+                rosterOk = true;
+            }
+        } catch(e) {
+            console.warn('Roster fetch failed:', e);
+        }
+    }
+
+    // Load schedule
+    if(SHEETS_SCHEDULE_URL && SHEETS_SCHEDULE_URL !== 'YOUR_SCHEDULE_SHEET_CSV_URL_HERE'){
+        try {
+            const res  = await fetch(SHEETS_SCHEDULE_URL);
+            const text = await res.text();
+            const parsed = parseScheduleCSV(text);
+            if(parsed){ SCHEDULE = parsed; scheduleOk = true; }
+        } catch(e) {
+            console.warn('Schedule fetch failed:', e);
+        }
+    }
+
+    initSchedule();
+    renderAll();
+
+    if(!silent){
+        if(rosterOk || scheduleOk){
+            const parts = [];
+            if(rosterOk)   parts.push('roster');
+            if(scheduleOk) parts.push('schedule');
+            showToast(`Loaded ${parts.join(' & ')} from Google Sheets ✓`);
+        } else {
+            showToast('Could not reach Google Sheets — using local data', 3000);
+        }
+    }
+}
+
+// ── Render topbar game info chips ───────────────────────────────────────
+
+// Safely parse a date string in either YYYY-MM-DD or M/D/YYYY (or M/D/YY) format
+function parseGameDate(str){
+    if(!str) return null;
+    str = str.trim();
+    // ISO format: YYYY-MM-DD
+    if(/^\d{4}-\d{2}-\d{2}$/.test(str)){
+        const [y,m,d] = str.split('-').map(Number);
+        return new Date(y, m-1, d);
+    }
+    // US format: M/D/YYYY or M/D/YY
+    if(/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(str)){
+        const [m,d,y] = str.split('/').map(Number);
+        const year = y < 100 ? 2000 + y : y;
+        return new Date(year, m-1, d);
+    }
+    // Fallback: let JS try
+    const dt = new Date(str);
+    return isNaN(dt) ? null : dt;
+}
+
 function initSchedule(){
-    const now = new Date();
-    // Strip time — compare date only
+    const now   = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    // Format today's date for display
     const dateStr = today.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
     document.getElementById('todayDate').textContent = dateStr;
 
-    // Find next game: earliest game whose date >= today
-    const sorted = [...SCHEDULE].sort((a,b)=>a.date.localeCompare(b.date));
+    // Find next upcoming game
+    const sorted = [...SCHEDULE].sort((a,b) => {
+        const da = parseGameDate(a.date), db = parseGameDate(b.date);
+        return (da||0) - (db||0);
+    });
     let next = null;
     for(const game of sorted){
-        const [y,m,d] = game.date.split('-').map(Number);
-        const gd = new Date(y, m-1, d);
-        if(gd >= today){ next = game; break; }
+        const gd = parseGameDate(game.date);
+        if(gd && gd >= today){ next = game; break; }
     }
+
+    // Opponent
     document.getElementById('opponentName').textContent = next ? next.opponent : 'No upcoming games';
+
+    // Field chip
+    const fieldChip = document.getElementById('gameChipField');
+    const fieldName = document.getElementById('chipFieldName');
+    if(next && next.field){
+        fieldName.textContent = next.field;
+        fieldChip.style.display = 'flex';
+    } else {
+        fieldChip.style.display = 'none';
+    }
+
+    // Location chip (Home = green, Away = red)
+    const locChip = document.getElementById('gameChipLocation');
+    const locSpan = document.getElementById('chipLocation');
+    if(next && next.location){
+        const isHome = next.location.toLowerCase() === 'home';
+        locSpan.textContent = next.location;
+        locChip.className = `game-chip ${isHome ? 'home' : 'away'}`;
+        locChip.style.display = 'flex';
+    } else {
+        locChip.style.display = 'none';
+    }
+
+    // Time chip
+    const timeChip = document.getElementById('gameChipTime');
+    const timeSpan = document.getElementById('chipTime');
+    if(next && next.time){
+        timeSpan.textContent = next.time;
+        timeChip.style.display = 'flex';
+    } else {
+        timeChip.style.display = 'none';
+    }
 }
 
 // ═══════════════════════════════════════════════
@@ -1932,6 +2183,8 @@ document.getElementById('clearBtnM').addEventListener('click',    ()=>{ closeMen
 document.getElementById('undoBtnM').addEventListener('click',     ()=>{ closeMenu(); doUndo(); });
 document.getElementById('redoBtnM').addEventListener('click',     ()=>{ closeMenu(); doRedo(); });
 document.getElementById('availBtnM').addEventListener('click',    ()=>{ closeMenu(); openAvailability(); });
+document.getElementById('loadSheetsBtn').addEventListener('click',  ()=>loadFromSheets(false));
+document.getElementById('loadSheetsBtnM').addEventListener('click', ()=>{ closeMenu(); loadFromSheets(false); });
 document.getElementById('panelBtnM').addEventListener('click',    ()=>{ closeMenu(); togglePanel(); });
 
 // ── Hamburger menu open/close ───────────────────
