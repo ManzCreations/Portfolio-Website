@@ -37,7 +37,7 @@
         }
 
         /* ── TOP BAR ── */
-        :root { --topbar-h: 52px; }
+        :root { --topbar-h: 52px; --bottombar-h: 52px; }
 
         #topbar {
             position: fixed;
@@ -197,7 +197,7 @@
         /* ── MAIN LAYOUT ── */
         #main {
             display: flex;
-            height: calc(100vh - var(--topbar-h));
+            height: calc(100vh - var(--topbar-h) - var(--bottombar-h));
             margin-top: var(--topbar-h);
         }
 
@@ -761,7 +761,7 @@
 
         /* ── TOAST ── */
         #toast {
-            position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+            position:fixed; bottom:calc(var(--bottombar-h) + 12px); left:50%; transform:translateX(-50%);
             background:rgba(0,213,255,0.12);
             border:1px solid var(--primary);
             color:var(--primary);
@@ -781,15 +781,568 @@
             /* Side panel slides in over the field on mobile */
             #sidePanel {
                 position: fixed;
-                right: 0; top: var(--topbar-h); bottom: 0;
+                right: 0; top: var(--topbar-h); bottom: var(--bottombar-h);
                 z-index: 150;
                 box-shadow: -8px 0 32px rgba(0,0,0,0.6);
             }
             .avail-grid { grid-template-columns:1fr; }
         }
 
+        /* ── BATTING LINEUP LEFT PANEL ── */
+        #battingPanel {
+            position: fixed;
+            left: 0;
+            bottom: var(--bottombar-h);
+            top: auto;
+            width: 148px;
+            max-height: calc(100vh - var(--topbar-h) - var(--bottombar-h));
+            z-index: 90;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 8px 0 8px 6px;
+            gap: 2px;
+            overflow: hidden;
+        }
+        #battingPanel.has-lineup { pointer-events: all; }
+        #battingPanelRows {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+        }
+        .batting-panel-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 9px; letter-spacing: 2px;
+            color: rgba(0,213,255,0.6);
+            text-transform: uppercase;
+            padding: 4px 6px 0;
+            flex-shrink: 0;
+        }
+        .bat-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px 3px 4px;
+            border-radius: 5px;
+            cursor: default;
+            transition: background .15s;
+            opacity: 0.82;
+        }
+        .bat-row:hover { opacity: 1; background: rgba(0,213,255,0.07); }
+        .bat-order {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 11px; font-weight: 700;
+            color: rgba(0,213,255,0.9);
+            min-width: 14px; text-align: right;
+            flex-shrink: 0;
+        }
+        .bat-num {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 10px;
+            color: rgba(255,255,255,0.55);
+            flex-shrink: 0;
+        }
+        .bat-name {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 12px; font-weight: 700;
+            color: rgba(255,255,255,0.88);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            flex: 1; min-width: 0;
+        }
+        .bat-result {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 10px; font-weight: 700;
+            color: rgba(0,213,255,0.9);
+            flex-shrink: 0;
+        }
+        /* Sub badge on bat row */
+        .bat-row.subbed .bat-name { color: rgba(255,200,50,0.9); }
+        .bat-sub-badge {
+            font-size: 8px; color: rgba(255,200,50,0.85);
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 640px) {
+            #battingPanel { width: 108px; }
+            .bat-name { font-size: 11px; }
+        }
+        @media (max-width: 420px) {
+            #battingPanel { width: 80px; }
+            .bat-num { display: none; }
+        }
+
+        /* ── BOTTOM BAR ── */
+        #bottomBar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: var(--bottombar-h);
+            background: rgba(4,10,18,0.97);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 8px;
+            z-index: 200;
+            backdrop-filter: blur(12px);
+        }
+        .bb-label {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 10px; letter-spacing: 1.5px;
+            color: var(--muted); text-transform: uppercase;
+            flex-shrink: 0;
+        }
+        #inningSpinnerWrap {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: rgba(0,213,255,0.07);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .inning-spin-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 13px;
+            width: 28px; height: 34px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background .15s;
+            flex-shrink: 0;
+        }
+        .inning-spin-btn:hover { background: rgba(0,213,255,0.15); }
+        .inning-spin-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        #inningDisplay {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 18px; font-weight: 900;
+            color: var(--primary);
+            padding: 0 10px;
+            min-width: 28px; text-align: center;
+            line-height: 34px;
+        }
+        .bb-divider { width:1px; height:28px; background:var(--border); flex-shrink:0; }
+        .bb-spacer { flex: 1; min-width: 0; }
+        .bb-btn {
+            background: rgba(0,213,255,0.08);
+            border: 1px solid var(--border);
+            color: var(--primary);
+            font-family:'Barlow Condensed',sans-serif;
+            font-weight:700; font-size:12px; letter-spacing:1px;
+            padding: 5px 12px; border-radius:6px;
+            cursor:pointer; transition: all .2s;
+            display:flex; align-items:center; gap:5px;
+            flex-shrink:0; white-space:nowrap;
+        }
+        .bb-btn:hover { background:rgba(0,213,255,0.18); border-color:var(--primary); }
+        .bb-btn.green {
+            background: rgba(34,197,94,0.1);
+            border-color: rgba(34,197,94,0.3);
+            color: #22c55e;
+        }
+        .bb-btn.green:hover { background:rgba(34,197,94,0.22); border-color:#22c55e; }
+        .bb-btn.amber {
+            background: rgba(245,158,11,0.1);
+            border-color: rgba(245,158,11,0.3);
+            color: #f59e0b;
+        }
+        .bb-btn.amber:hover { background:rgba(245,158,11,0.22); border-color:#f59e0b; }
+
+        @media (max-width: 600px) {
+            .bb-hide-sm { display: none !important; }
+            #bottomBar { gap: 6px; padding: 0 8px; }
+        }
+        @media (max-width: 400px) {
+            .bb-hide-xs { display: none !important; }
+        }
+
+        /* ── BATTING LINEUP BUILDER MODAL ── */
+        #lineupBuilderOverlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 800;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        #lineupBuilderOverlay.open { display: flex; }
+        #lineupBuilderModal {
+            background: linear-gradient(135deg,#0a1520,#0d1f30);
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 14px;
+            padding: 24px 26px 20px;
+            width: min(480px, 95vw);
+            max-height: 88vh;
+            display: flex; flex-direction: column;
+            gap: 0;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.85);
+            animation: modalIn .2s ease;
+            position: relative;
+        }
+        .lbm-title {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:22px; font-weight:900; letter-spacing:2px;
+            color:#fff; margin-bottom:4px;
+        }
+        .lbm-sub {
+            font-size:12px; color:var(--muted); margin-bottom:16px;
+        }
+        #lineupSlots {
+            display: flex; flex-direction: column; gap: 6px;
+            overflow-y: auto; flex: 1;
+            padding-right: 4px;
+        }
+        #lineupSlots::-webkit-scrollbar { width: 3px; }
+        #lineupSlots::-webkit-scrollbar-thumb { background: var(--border); border-radius:2px; }
+        .lineup-slot {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 7px 10px;
+        }
+        .ls-order {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:13px; font-weight:700;
+            color:var(--primary);
+            min-width:18px; text-align:right;
+            flex-shrink:0;
+        }
+        .ls-player {
+            flex:1; min-width:0;
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:15px; font-weight:700; color:#fff;
+        }
+        .ls-num {
+            font-size:11px; color:var(--muted); margin-left:4px;
+        }
+        .ls-select {
+            flex:1;
+            background:rgba(0,213,255,0.07);
+            border:1px solid var(--border);
+            color:var(--primary);
+            font-family:'Barlow Condensed',sans-serif;
+            font-weight:700; font-size:13px;
+            padding:4px 8px; border-radius:5px;
+            cursor:pointer; outline:none;
+        }
+        .ls-select option { background:#0a1520; color:#fff; }
+        .ls-remove {
+            background:none; border:none;
+            color:var(--muted); cursor:pointer;
+            font-size:13px; padding:2px 4px;
+            flex-shrink:0;
+        }
+        .ls-remove:hover { color:#ef4444; }
+        .ls-sub-btn {
+            background:rgba(245,158,11,0.1);
+            border:1px solid rgba(245,158,11,0.3);
+            color:#f59e0b;
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:10px; font-weight:700; letter-spacing:1px;
+            padding:3px 7px; border-radius:5px;
+            cursor:pointer; flex-shrink:0;
+        }
+        .ls-sub-btn:hover { background:rgba(245,158,11,0.22); }
+        #addBatterBtn {
+            margin-top:10px;
+            background:rgba(0,213,255,0.07);
+            border:1px dashed var(--border);
+            color:var(--muted);
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:12px; font-weight:700; letter-spacing:1px;
+            padding:7px; border-radius:8px;
+            cursor:pointer; width:100%; transition:all .2s;
+        }
+        #addBatterBtn:hover { border-color:var(--primary); color:var(--primary); background:rgba(0,213,255,0.1); }
+        .lbm-actions {
+            display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;
+        }
+
+        /* ── INNING STATS MODAL ── */
+        #inningStatsOverlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 800;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        #inningStatsOverlay.open { display: flex; }
+        #inningStatsModal {
+            background: linear-gradient(135deg,#0a1520,#0d1f30);
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 14px;
+            padding: 22px 24px 18px;
+            width: min(560px, 95vw);
+            max-height: 88vh;
+            display: flex; flex-direction: column;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.85);
+            animation: modalIn .2s ease;
+            position: relative;
+        }
+        .ism-header { margin-bottom: 14px; }
+        .ism-title {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:22px; font-weight:900; letter-spacing:2px; color:#fff;
+        }
+        .ism-sub { font-size:12px; color:var(--muted); }
+        #inningStatsList {
+            display: flex; flex-direction: column; gap: 5px;
+            overflow-y: auto; flex: 1;
+        }
+        #inningStatsList::-webkit-scrollbar { width: 3px; }
+        #inningStatsList::-webkit-scrollbar-thumb { background: var(--border); border-radius:2px; }
+        .is-row {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--color, var(--primary));
+            border-radius: 8px;
+            padding: 7px 10px;
+            cursor: pointer;
+            transition: background .15s;
+            flex-shrink: 0;
+        }
+        .is-row:hover { background: rgba(255,255,255,0.09); }
+        .is-order {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:12px; font-weight:700; color:var(--muted);
+            min-width:16px; text-align:right; flex-shrink:0;
+        }
+        .is-num {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:11px; color:var(--color,var(--primary));
+            min-width:22px; text-align:center; flex-shrink:0;
+        }
+        .is-name {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:15px; font-weight:700; color:#fff;
+            flex:1; min-width:0;
+        }
+        .is-pa {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:11px; color:var(--muted);
+            flex-shrink:0;
+        }
+        .is-results {
+            display:flex; gap:3px; flex-wrap:wrap; flex-shrink:0;
+        }
+        .is-result-pill {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:10px; font-weight:700;
+            padding:1px 5px; border-radius:4px;
+            background:rgba(0,213,255,0.12);
+            border:1px solid rgba(0,213,255,0.25);
+            color:var(--primary);
+        }
+        .is-result-pill.hit { background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.35); color:#22c55e; }
+        .is-result-pill.out { background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.25); color:#ef4444; }
+        .is-result-pill.walk { background:rgba(245,158,11,0.12); border-color:rgba(245,158,11,0.3); color:#f59e0b; }
+
+        /* ── PLAYER DETAIL MODAL ── */
+        #playerDetailOverlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 900;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        #playerDetailOverlay.open { display: flex; }
+        #playerDetailModal {
+            background: linear-gradient(135deg,#0a1520,#0d1f30);
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--color,var(--primary));
+            border-radius: 14px;
+            padding: 22px 24px 18px;
+            width: min(620px, 95vw);
+            max-height: 88vh;
+            display: flex; flex-direction: column;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.9);
+            animation: modalIn .2s ease;
+            position: relative;
+        }
+        .pdm-name {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:28px; font-weight:900; color:#fff; line-height:1;
+        }
+        .pdm-num {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:13px; letter-spacing:2px; color:var(--color,var(--primary));
+            margin-bottom:2px;
+        }
+        .pdm-tabs {
+            display:flex; gap:4px; margin:14px 0 12px;
+            border-bottom:1px solid var(--border);
+            padding-bottom:0;
+        }
+        .pdm-tab {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:12px; font-weight:700; letter-spacing:1px;
+            text-transform:uppercase;
+            padding:6px 14px; border-radius:6px 6px 0 0;
+            cursor:pointer; border:1px solid transparent;
+            border-bottom:none; color:var(--muted);
+            background:transparent; transition:all .15s;
+            margin-bottom:-1px;
+        }
+        .pdm-tab.active {
+            background:rgba(0,213,255,0.1);
+            border-color:var(--border);
+            border-bottom-color:transparent;
+            color:var(--primary);
+        }
+        .pdm-tab-content { display:none; overflow-y:auto; flex:1; }
+        .pdm-tab-content.active { display:flex; flex-direction:column; gap:5px; }
+        .pdm-table {
+            width:100%; border-collapse:collapse;
+            font-family:'Barlow Condensed',sans-serif;
+        }
+        .pdm-table th {
+            font-size:10px; letter-spacing:1.5px; color:var(--muted);
+            text-transform:uppercase; text-align:left;
+            padding:6px 8px; border-bottom:1px solid var(--border);
+            white-space:nowrap;
+        }
+        .pdm-table td {
+            font-size:13px; font-weight:700; color:#fff;
+            padding:7px 8px; border-bottom:1px solid rgba(0,213,255,0.06);
+            vertical-align:middle;
+        }
+        .pdm-table td.muted { color:var(--muted); font-weight:400; }
+        .pdm-table tr:hover td { background:rgba(255,255,255,0.04); }
+        .pdm-edit-row {
+            display:flex; align-items:center; gap:6px;
+            background:rgba(255,255,255,0.03);
+            border:1px solid var(--border);
+            border-radius:8px; padding:8px 10px;
+            flex-shrink:0;
+        }
+        .pdm-edit-label {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:11px; letter-spacing:1px; color:var(--muted);
+            text-transform:uppercase; min-width:60px; flex-shrink:0;
+        }
+        .pdm-pa-input {
+            width:48px;
+            background:rgba(0,213,255,0.07);
+            border:1px solid var(--border);
+            color:var(--primary);
+            font-family:'Barlow Condensed',sans-serif;
+            font-weight:700; font-size:14px;
+            padding:4px 6px; border-radius:5px;
+            outline:none; text-align:center;
+        }
+        .pdm-results-wrap {
+            display:flex; gap:4px; flex-wrap:wrap; flex:1;
+        }
+        .pdm-result-select {
+            background:rgba(0,213,255,0.07);
+            border:1px solid var(--border);
+            color:var(--primary);
+            font-family:'Barlow Condensed',sans-serif;
+            font-weight:700; font-size:12px;
+            padding:3px 6px; border-radius:5px;
+            outline:none; cursor:pointer; flex:1; min-width:80px;
+        }
+        .pdm-result-select option { background:#0a1520; color:#fff; }
+        .pdm-add-pa-btn {
+            background:rgba(34,197,94,0.1);
+            border:1px solid rgba(34,197,94,0.3);
+            color:#22c55e;
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:11px; font-weight:700;
+            padding:4px 8px; border-radius:5px;
+            cursor:pointer; flex-shrink:0;
+        }
+        .pdm-add-pa-btn:hover { background:rgba(34,197,94,0.2); }
+        .pdm-rm-pa-btn {
+            background:none; border:none;
+            color:var(--muted); cursor:pointer;
+            font-size:12px; padding:2px 4px; flex-shrink:0;
+        }
+        .pdm-rm-pa-btn:hover { color:#ef4444; }
+
+        /* ── NEW INNING MODAL ── */
+        #newInningOverlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 850;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        #newInningOverlay.open { display: flex; }
+        #newInningModal {
+            background: linear-gradient(135deg,#0a1520,#0d1f30);
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 14px;
+            padding: 22px 24px 18px;
+            width: min(540px, 95vw);
+            max-height: 88vh;
+            display: flex; flex-direction: column;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.9);
+            animation: modalIn .2s ease;
+            position: relative;
+        }
+        .nim-title {
+            font-family:'Barlow Condensed',sans-serif;
+            font-size:22px; font-weight:900; letter-spacing:2px; color:#fff;
+            margin-bottom:3px;
+        }
+        .nim-sub { font-size:12px; color:var(--muted); margin-bottom:14px; }
+        #newInningTable {
+            overflow-y:auto; flex:1;
+        }
+        .nim-table {
+            width:100%; border-collapse:collapse;
+            font-family:'Barlow Condensed',sans-serif;
+        }
+        .nim-table th {
+            font-size:10px; letter-spacing:1.5px; color:var(--muted);
+            text-transform:uppercase; text-align:left;
+            padding:6px 8px 8px; border-bottom:1px solid var(--border);
+            white-space:nowrap; position:sticky; top:0;
+            background:linear-gradient(135deg,#0a1520,#0d1f30); z-index:1;
+        }
+        .nim-table td {
+            padding:5px 6px; border-bottom:1px solid rgba(0,213,255,0.05);
+            vertical-align:middle;
+        }
+        .nim-table tr:hover td { background:rgba(255,255,255,0.03); }
+        .nim-order { font-size:12px; font-weight:700; color:var(--muted); text-align:center; }
+        .nim-player { font-size:14px; font-weight:700; color:#fff; }
+        .nim-num { font-size:11px; color:var(--muted); }
+        .nim-pa-input {
+            width:44px; text-align:center;
+            background:rgba(0,213,255,0.07);
+            border:1px solid var(--border);
+            color:var(--primary);
+            font-family:'Barlow Condensed',sans-serif;
+            font-weight:700; font-size:14px;
+            padding:4px 4px; border-radius:5px;
+            outline:none;
+        }
+        .nim-pa-input:focus { border-color:var(--primary); }
+        .nim-result-container {
+            display:flex; gap:3px; flex-wrap:wrap; align-items:center;
+        }
+        .nim-result-select {
+            background:rgba(0,213,255,0.07);
+            border:1px solid var(--border);
+            color:var(--primary);
+            font-family:'Barlow Condensed',sans-serif;
+            font-weight:700; font-size:11px;
+            padding:3px 5px; border-radius:5px;
+            outline:none; cursor:pointer;
+        }
+        .nim-result-select option { background:#0a1520; color:#fff; }
+        .nim-actions { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+
         /* Drop target highlight */
-        .pos-drop-zone {
             position:absolute;
             transform:translate(-50%,-50%);
             /* width/height set dynamically in renderBubbles to match SVG scale */
@@ -925,6 +1478,104 @@
     <button class="tb-btn" id="loadSheetsBtnM" style="color:#a78bfa;border-color:rgba(167,139,250,0.3)"><i class="fas fa-cloud-download-alt"></i> Load from Sheets</button>
     <button class="tb-btn" id="availBtnM"    style="color:#22c55e;border-color:rgba(34,197,94,0.3)"><i class="fas fa-users"></i> Availability</button>
     <button class="tb-btn" id="panelBtnM"><i class="fas fa-list"></i> Roster</button>
+</div>
+
+<!-- BOTTOM BAR -->
+<div id="bottomBar">
+    <span class="bb-label bb-hide-sm">Inning</span>
+    <div id="inningSpinnerWrap">
+        <button class="inning-spin-btn" id="inningDown" title="Previous inning">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+        <div id="inningDisplay">1</div>
+        <button class="inning-spin-btn" id="inningUp" title="Next inning">
+            <i class="fas fa-chevron-up"></i>
+        </button>
+    </div>
+    <div class="bb-divider"></div>
+    <button class="bb-btn" id="openStatsBtn" title="View batting stats for this inning">
+        <i class="fas fa-chart-bar"></i><span class="bb-hide-sm"> Stats</span>
+    </button>
+    <div class="bb-spacer"></div>
+    <button class="bb-btn amber" id="subLineupBtn" title="Make substitution">
+        <i class="fas fa-exchange-alt"></i><span class="bb-hide-xs"> Sub</span>
+    </button>
+    <button class="bb-btn green" id="editLineupBtn" title="Edit batting lineup">
+        <i class="fas fa-list-ol"></i><span class="bb-hide-sm"> Lineup</span>
+    </button>
+</div>
+
+<!-- BATTING PANEL (left overlay) -->
+<div id="battingPanel">
+    <div class="batting-panel-title">Batting Order</div>
+    <div id="battingPanelRows"></div>
+</div>
+
+<!-- LINEUP BUILDER MODAL -->
+<div id="lineupBuilderOverlay">
+    <div id="lineupBuilderModal">
+        <button class="modal-close" id="lineupBuilderClose">✕</button>
+        <div class="lbm-title">BATTING LINEUP</div>
+        <div class="lbm-sub">Set the batting order. Lineup and fielding are independent.</div>
+        <div id="lineupSlots"></div>
+        <button id="addBatterBtn"><i class="fas fa-plus"></i> Add Batter</button>
+        <div class="lbm-actions">
+            <button class="tb-btn" id="lineupBuilderCancel"><i class="fas fa-times"></i> Cancel</button>
+            <button class="tb-btn accent" id="lineupBuilderSave"><i class="fas fa-check"></i> Save Lineup</button>
+        </div>
+    </div>
+</div>
+
+<!-- INNING STATS MODAL -->
+<div id="inningStatsOverlay">
+    <div id="inningStatsModal">
+        <button class="modal-close" id="inningStatsClose">✕</button>
+        <div class="ism-header">
+            <div class="ism-title">INNING <span id="ismInningNum">1</span> — BATTING</div>
+            <div class="ism-sub">Click a player to view/edit their at-bat details.</div>
+        </div>
+        <div id="inningStatsList"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="tb-btn" id="ismFieldingBtn"><i class="fas fa-baseball-ball"></i> View Fielding</button>
+            <div style="flex:1"></div>
+            <button class="tb-btn accent" id="ismDoneBtn"><i class="fas fa-check"></i> Done</button>
+        </div>
+    </div>
+</div>
+
+<!-- PLAYER DETAIL MODAL -->
+<div id="playerDetailOverlay">
+    <div id="playerDetailModal">
+        <button class="modal-close" id="playerDetailClose">✕</button>
+        <div class="pdm-num" id="pdmNum"></div>
+        <div class="pdm-name" id="pdmName"></div>
+        <div class="pdm-tabs">
+            <button class="pdm-tab active" data-tab="hitting">🏏 Hitting</button>
+            <button class="pdm-tab" data-tab="fielding">⚾ Fielding</button>
+        </div>
+        <div class="pdm-tab-content active" id="pdmHittingTab"></div>
+        <div class="pdm-tab-content" id="pdmFieldingTab"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+            <button class="tb-btn" id="pdmBackBtn"><i class="fas fa-arrow-left"></i> Back</button>
+            <div style="flex:1"></div>
+            <button class="tb-btn accent" id="pdmSaveBtn"><i class="fas fa-save"></i> Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- NEW INNING MODAL -->
+<div id="newInningOverlay">
+    <div id="newInningModal">
+        <button class="modal-close" id="newInningClose">✕</button>
+        <div class="nim-title">INNING <span id="nimInningNum">2</span> — LOG AT-BATS</div>
+        <div class="nim-sub">Record what happened in the previous inning before advancing.</div>
+        <div id="newInningTable"></div>
+        <div class="nim-actions">
+            <button class="tb-btn" id="nimSkipBtn"><i class="fas fa-forward"></i> Skip</button>
+            <div style="flex:1"></div>
+            <button class="tb-btn accent" id="nimSaveBtn"><i class="fas fa-check"></i> Save &amp; Continue</button>
+        </div>
+    </div>
 </div>
 
 <!-- MAIN -->
@@ -2556,14 +3207,6 @@ function doClear(){
     renderAll();
     showToast('Inning cleared');
 }
-function doSetInning(val){
-    currentInning = Number(val);
-    // Keep both selects in sync
-    document.getElementById('inningSelect').value       = val;
-    document.getElementById('inningSelectMobile').value = val;
-    renderAll();
-}
-
 // ── Desktop controls ───────────────────────────
 document.getElementById('inningSelect').addEventListener('change', function(){ doSetInning(this.value); });
 document.getElementById('generateBtn').addEventListener('click', generateLineup);
@@ -2634,9 +3277,649 @@ window.addEventListener('orientationchange', () => {
 });
 
 // ═══════════════════════════════════════════════
-//  INIT
+//  BATTING SYSTEM — State
 // ═══════════════════════════════════════════════
-initSchedule();
+
+// battingOrder[inning] = [ {playerId, sub: bool} ] — ordered list
+// battingStats[inning][playerId] = [ {result: 'code' | null} ] — array of PAs
+const battingOrder = {};
+const battingStats = {};
+INNINGS.forEach(i => { battingOrder[i] = null; battingStats[i] = {}; });
+
+// Track highest inning "visited" (for spinner logic)
+let highestVisitedInning = 1;
+
+// Standard at-bat result codes
+const AB_RESULTS = [
+    { code: '',    label: '—',   type: 'none'  },
+    { code: '1B',  label: '1B',  type: 'hit'   },
+    { code: '2B',  label: '2B',  type: 'hit'   },
+    { code: '3B',  label: '3B',  type: 'hit'   },
+    { code: 'HR',  label: 'HR',  type: 'hit'   },
+    { code: 'BB',  label: 'BB',  type: 'walk'  },
+    { code: 'HBP', label: 'HBP', type: 'walk'  },
+    { code: 'IBB', label: 'IBB', type: 'walk'  },
+    { code: 'K',   label: 'K',   type: 'out'   },
+    { code: 'KL',  label: 'KL',  type: 'out'   },
+    { code: 'GO',  label: 'GO',  type: 'out'   },
+    { code: 'FO',  label: 'FO',  type: 'out'   },
+    { code: 'PO',  label: 'PO',  type: 'out'   },
+    { code: 'SAC', label: 'SAC', type: 'out'   },
+    { code: 'SF',  label: 'SF',  type: 'out'   },
+    { code: 'FC',  label: 'FC',  type: 'other' },
+    { code: 'E',   label: 'E',   type: 'other' },
+    { code: 'DP',  label: 'DP',  type: 'out'   },
+];
+
+function resultType(code) {
+    const r = AB_RESULTS.find(x => x.code === code);
+    return r ? r.type : 'none';
+}
+
+function resultPillClass(type) {
+    if (type === 'hit') return 'hit';
+    if (type === 'out') return 'out';
+    if (type === 'walk') return 'walk';
+    return '';
+}
+
+function buildResultSelect(value='', cls='') {
+    const sel = document.createElement('select');
+    sel.className = cls || 'nim-result-select';
+    for (const r of AB_RESULTS) {
+        const opt = document.createElement('option');
+        opt.value = r.code;
+        opt.textContent = r.label;
+        if (r.code === value) opt.selected = true;
+        sel.appendChild(opt);
+    }
+    return sel;
+}
+
+// Get the effective batting order for an inning
+// (falls back to previous inning's order if current is null)
+function getEffectiveOrder(inning) {
+    for (let i = inning; i >= 1; i--) {
+        if (battingOrder[i] && battingOrder[i].length > 0) return battingOrder[i];
+    }
+    return [];
+}
+
+// Ensure battingStats has an entry for every player in the order for this inning
+function ensureStats(inning) {
+    const order = getEffectiveOrder(inning);
+    if (!battingStats[inning]) battingStats[inning] = {};
+    for (const entry of order) {
+        if (!battingStats[inning][entry.playerId]) {
+            battingStats[inning][entry.playerId] = [];
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════
+//  BATTING PANEL RENDER
+// ═══════════════════════════════════════════════
+function renderBattingPanel() {
+    const panel = document.getElementById('battingPanel');
+    const container = document.getElementById('battingPanelRows');
+    container.innerHTML = '';
+
+    const order = getEffectiveOrder(currentInning);
+    if (order.length === 0) {
+        panel.classList.remove('has-lineup');
+        return;
+    }
+    panel.classList.add('has-lineup');
+
+    ensureStats(currentInning);
+    const stats = battingStats[currentInning];
+
+    order.forEach((entry, idx) => {
+        const player = getPlayer(entry.playerId);
+        if (!player) return;
+
+        const row = document.createElement('div');
+        row.className = 'bat-row' + (entry.sub ? ' subbed' : '');
+
+        const pas = stats[entry.playerId] || [];
+        const results = pas.filter(p => p.result).map(p => p.result);
+
+        row.innerHTML = `
+            <span class="bat-order">${idx+1}</span>
+            <span class="bat-num">#${player.number}</span>
+            <span class="bat-name">${player.name.split(' ').slice(-1)[0]}</span>
+            ${results.length ? `<span class="bat-result">${results.join(' ')}</span>` : ''}
+            ${entry.sub ? '<span class="bat-sub-badge"><i class="fas fa-arrows-alt-h"></i></span>' : ''}
+        `;
+        container.appendChild(row);
+    });
+}
+
+// ═══════════════════════════════════════════════
+//  INNING SPINNER
+// ═══════════════════════════════════════════════
+function updateSpinner() {
+    document.getElementById('inningDisplay').textContent = currentInning;
+    document.getElementById('inningDown').disabled = currentInning <= 1;
+    document.getElementById('inningUp').disabled = currentInning >= 7;
+    // Sync with existing inning selects
+    document.getElementById('inningSelect').value = currentInning;
+    document.getElementById('inningSelectMobile').value = currentInning;
+}
+
+document.getElementById('inningDown').addEventListener('click', () => {
+    if (currentInning <= 1) return;
+    doSetInning(currentInning - 1);
+});
+
+document.getElementById('inningUp').addEventListener('click', () => {
+    if (currentInning >= 7) return;
+    const nextInning = currentInning + 1;
+    const order = getEffectiveOrder(currentInning);
+
+    // If this is a new inning and there's a batting order, prompt for stats
+    if (nextInning > highestVisitedInning && order.length > 0) {
+        openNewInningModal(currentInning, nextInning);
+    } else {
+        doSetInning(nextInning);
+    }
+});
+
+// Also keep the existing inning select synced with spinner
+
+function doSetInning(val) {
+    currentInning = Number(val);
+    document.getElementById('inningSelect').value = val;
+    document.getElementById('inningSelectMobile').value = val;
+    document.getElementById('inningDisplay').textContent = val;
+    document.getElementById('inningDown').disabled = currentInning <= 1;
+    document.getElementById('inningUp').disabled = currentInning >= 7;
+    renderAll();
+    renderBattingPanel();
+}
+
+// ═══════════════════════════════════════════════
+//  LINEUP BUILDER MODAL
+// ═══════════════════════════════════════════════
+let lineupBuilderDraft = []; // [{playerId}]
+
+function openLineupBuilder() {
+    // Reset title
+    document.getElementById('lineupBuilderModal').querySelector('.lbm-title').textContent = 'BATTING LINEUP';
+    document.getElementById('lineupBuilderModal').querySelector('.lbm-sub').textContent = 'Set the batting order. Lineup and fielding are independent.';
+    // Load existing lineup or empty
+    const existing = battingOrder[currentInning];
+    if (existing && existing.length > 0) {
+        lineupBuilderDraft = existing.map(e => ({ playerId: e.playerId, sub: e.sub || false }));
+    } else {
+        // Try inheriting from previous inning
+        const inherited = getEffectiveOrder(currentInning);
+        lineupBuilderDraft = inherited.map(e => ({ playerId: e.playerId, sub: false }));
+    }
+    renderLineupBuilderSlots();
+    document.getElementById('lineupBuilderOverlay').classList.add('open');
+}
+
+function closeLineupBuilder() {
+    document.getElementById('lineupBuilderOverlay').classList.remove('open');
+}
+
+function renderLineupBuilderSlots() {
+    const container = document.getElementById('lineupSlots');
+    container.innerHTML = '';
+
+    const usedIds = new Set(lineupBuilderDraft.map(e => e.playerId));
+    const availableRoster = [...availablePlayers].map(id => getPlayer(id)).filter(Boolean);
+
+    lineupBuilderDraft.forEach((entry, idx) => {
+        const player = getPlayer(entry.playerId);
+        const slot = document.createElement('div');
+        slot.className = 'lineup-slot';
+
+        // Build select with all available players
+        const sel = document.createElement('select');
+        sel.className = 'ls-select';
+        // Empty option
+        const emptyOpt = document.createElement('option');
+        emptyOpt.value = '';
+        emptyOpt.textContent = '— Select player —';
+        sel.appendChild(emptyOpt);
+
+        for (const p of availableRoster) {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = `#${p.number} ${p.name}`;
+            if (p.id === entry.playerId) opt.selected = true;
+            sel.appendChild(opt);
+        }
+        // Also add not-available players if they're already in the draft
+        if (entry.playerId && !availablePlayers.has(entry.playerId)) {
+            const p = getPlayer(entry.playerId);
+            if (p) {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = `#${p.number} ${p.name}`;
+                opt.selected = true;
+                sel.appendChild(opt);
+            }
+        }
+
+        sel.addEventListener('change', () => {
+            lineupBuilderDraft[idx].playerId = Number(sel.value) || null;
+        });
+
+        const rmBtn = document.createElement('button');
+        rmBtn.className = 'ls-remove';
+        rmBtn.innerHTML = '<i class="fas fa-times"></i>';
+        rmBtn.title = 'Remove';
+        rmBtn.addEventListener('click', () => {
+            lineupBuilderDraft.splice(idx, 1);
+            renderLineupBuilderSlots();
+        });
+
+        slot.innerHTML = `<span class="ls-order">${idx+1}</span>`;
+        slot.appendChild(sel);
+        slot.appendChild(rmBtn);
+        container.appendChild(slot);
+    });
+}
+
+document.getElementById('addBatterBtn').addEventListener('click', () => {
+    lineupBuilderDraft.push({ playerId: null, sub: false });
+    renderLineupBuilderSlots();
+    // Scroll to bottom
+    const container = document.getElementById('lineupSlots');
+    container.scrollTop = container.scrollHeight;
+});
+
+document.getElementById('lineupBuilderSave').addEventListener('click', () => {
+    const cleaned = lineupBuilderDraft.filter(e => e.playerId);
+    if (cleaned.length === 0) {
+        showToast('Add at least one batter');
+        return;
+    }
+    // Save to this inning
+    battingOrder[currentInning] = cleaned;
+    // Mark all further innings to inherit
+    for (let i = currentInning; i <= 7; i++) {
+        if (!battingOrder[i]) battingOrder[i] = null; // will inherit
+    }
+    ensureStats(currentInning);
+    closeLineupBuilder();
+    renderBattingPanel();
+    showToast('Batting lineup saved ✓');
+});
+
+document.getElementById('lineupBuilderCancel').addEventListener('click', closeLineupBuilder);
+document.getElementById('lineupBuilderClose').addEventListener('click', closeLineupBuilder);
+document.getElementById('editLineupBtn').addEventListener('click', openLineupBuilder);
+
+// ═══════════════════════════════════════════════
+//  SUBSTITUTION
+// ═══════════════════════════════════════════════
+function openSubModal() {
+    const order = getEffectiveOrder(currentInning);
+    if (order.length === 0) {
+        showToast('Set the batting lineup first');
+        openLineupBuilder();
+        return;
+    }
+    // Use lineup builder in "sub mode": pre-populate and allow changes
+    // Copy current effective order to this inning with sub flags
+    battingOrder[currentInning] = order.map(e => ({ ...e }));
+    lineupBuilderDraft = battingOrder[currentInning].map(e => ({ ...e }));
+
+    // Add a sub marker row at bottom for convenience
+    const modal = document.getElementById('lineupBuilderModal');
+    modal.querySelector('.lbm-title').textContent = 'MAKE SUBSTITUTION';
+    modal.querySelector('.lbm-sub').textContent = 'Replace a player at their batting slot for inning ' + currentInning + '.';
+    renderLineupBuilderSlots();
+    document.getElementById('lineupBuilderOverlay').classList.add('open');
+}
+
+document.getElementById('subLineupBtn').addEventListener('click', openSubModal);
+
+// ═══════════════════════════════════════════════
+//  NEW INNING MODAL (log at-bats before advancing)
+// ═══════════════════════════════════════════════
+let nimFromInning = 1, nimToInning = 2;
+
+function openNewInningModal(fromInning, toInning) {
+    nimFromInning = fromInning;
+    nimToInning = toInning;
+    document.getElementById('nimInningNum').textContent = fromInning;
+    document.getElementById('newInningModal').querySelector('.nim-sub').textContent =
+        `Record at-bats from inning ${fromInning} before moving to inning ${toInning}.`;
+
+    ensureStats(fromInning);
+    const order = getEffectiveOrder(fromInning);
+    const stats = battingStats[fromInning];
+
+    const tableWrap = document.getElementById('newInningTable');
+    tableWrap.innerHTML = '';
+
+    const table = document.createElement('table');
+    table.className = 'nim-table';
+    table.innerHTML = `<thead><tr>
+        <th>#</th><th>Player</th><th>PA</th><th>Results</th>
+    </tr></thead>`;
+    const tbody = document.createElement('tbody');
+
+    order.forEach((entry, idx) => {
+        const player = getPlayer(entry.playerId);
+        if (!player) return;
+        const pas = stats[entry.playerId] || [];
+
+        const tr = document.createElement('tr');
+        tr.dataset.playerId = entry.playerId;
+
+        // PA count cell
+        const paInput = document.createElement('input');
+        paInput.type = 'number';
+        paInput.min = 0; paInput.max = 9;
+        paInput.className = 'nim-pa-input';
+        paInput.value = pas.length || 0;
+
+        // Results cell
+        const resTd = document.createElement('td');
+        const resWrap = document.createElement('div');
+        resWrap.className = 'nim-result-container';
+        resTd.appendChild(resWrap);
+
+        function syncResultSelects() {
+            const count = parseInt(paInput.value) || 0;
+            const existing = [...resWrap.querySelectorAll('select')].map(s => s.value);
+            resWrap.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const sel = buildResultSelect(existing[i] || '', 'nim-result-select');
+                resWrap.appendChild(sel);
+            }
+        }
+
+        paInput.addEventListener('input', syncResultSelects);
+        // Pre-populate
+        for (const pa of pas) {
+            const sel = buildResultSelect(pa.result || '', 'nim-result-select');
+            resWrap.appendChild(sel);
+        }
+
+        tr.innerHTML = `
+            <td class="nim-order">${idx+1}</td>
+            <td><div class="nim-player">${player.name}</div><div class="nim-num">#${player.number}</div></td>
+        `;
+        const paTd = document.createElement('td');
+        paTd.appendChild(paInput);
+        tr.appendChild(paTd);
+        tr.appendChild(resTd);
+        tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    tableWrap.appendChild(table);
+    document.getElementById('newInningOverlay').classList.add('open');
+}
+
+function collectNimData(save) {
+    if (save) {
+        const rows = document.querySelectorAll('#newInningTable tbody tr');
+        rows.forEach(tr => {
+            const pid = Number(tr.dataset.playerId);
+            const paCount = parseInt(tr.querySelector('.nim-pa-input').value) || 0;
+            const selects = tr.querySelectorAll('.nim-result-select');
+            const pas = [];
+            for (let i = 0; i < paCount; i++) {
+                pas.push({ result: selects[i] ? selects[i].value : '' });
+            }
+            battingStats[nimFromInning][pid] = pas;
+        });
+    }
+
+    document.getElementById('newInningOverlay').classList.remove('open');
+    highestVisitedInning = Math.max(highestVisitedInning, nimToInning);
+    doSetInning(nimToInning);
+}
+
+document.getElementById('nimSaveBtn').addEventListener('click', () => collectNimData(true));
+document.getElementById('nimSkipBtn').addEventListener('click', () => collectNimData(false));
+document.getElementById('newInningClose').addEventListener('click', () => {
+    document.getElementById('newInningOverlay').classList.remove('open');
+});
+
+// ═══════════════════════════════════════════════
+//  INNING STATS MODAL
+// ═══════════════════════════════════════════════
+function openInningStats() {
+    document.getElementById('ismInningNum').textContent = currentInning;
+    renderInningStatsList();
+    document.getElementById('inningStatsOverlay').classList.add('open');
+}
+
+function renderInningStatsList() {
+    const container = document.getElementById('inningStatsList');
+    container.innerHTML = '';
+    const order = getEffectiveOrder(currentInning);
+    if (order.length === 0) {
+        container.innerHTML = '<div style="font-family:\'Barlow Condensed\',sans-serif;color:var(--muted);font-size:13px;padding:12px 0;">No batting lineup set. Build the lineup first.</div>';
+        return;
+    }
+    ensureStats(currentInning);
+    const stats = battingStats[currentInning];
+
+    order.forEach((entry, idx) => {
+        const player = getPlayer(entry.playerId);
+        if (!player) return;
+        const pas = stats[entry.playerId] || [];
+        const color = playerColor(player);
+
+        const row = document.createElement('div');
+        row.className = 'is-row';
+        row.style.setProperty('--color', color);
+
+        const results = pas.filter(p => p.result);
+        const pillsHtml = results.map(p => {
+            const type = resultType(p.result);
+            return `<span class="is-result-pill ${resultPillClass(type)}">${p.result || '—'}</span>`;
+        }).join('');
+
+        row.innerHTML = `
+            <span class="is-order">${idx+1}</span>
+            <span class="is-num">#${player.number}</span>
+            <span class="is-name">${player.name}</span>
+            <span class="is-pa">${pas.length} PA</span>
+            <div class="is-results">${pillsHtml}</div>
+            <i class="fas fa-chevron-right" style="color:var(--muted);font-size:10px;flex-shrink:0;"></i>
+        `;
+        row.addEventListener('click', () => openPlayerDetail(entry.playerId));
+        container.appendChild(row);
+    });
+}
+
+document.getElementById('openStatsBtn').addEventListener('click', openInningStats);
+document.getElementById('inningStatsClose').addEventListener('click', () => {
+    document.getElementById('inningStatsOverlay').classList.remove('open');
+});
+document.getElementById('ismDoneBtn').addEventListener('click', () => {
+    document.getElementById('inningStatsOverlay').classList.remove('open');
+});
+document.getElementById('ismFieldingBtn').addEventListener('click', () => {
+    // Show fielding tab by default for the first player
+    const order = getEffectiveOrder(currentInning);
+    if (order.length > 0) openPlayerDetail(order[0].playerId, 'fielding');
+});
+
+// ═══════════════════════════════════════════════
+//  PLAYER DETAIL MODAL
+// ═══════════════════════════════════════════════
+let pdmPlayerId = null;
+
+function openPlayerDetail(playerId, defaultTab='hitting') {
+    pdmPlayerId = playerId;
+    const player = getPlayer(playerId);
+    if (!player) return;
+
+    document.getElementById('pdmName').textContent = player.name;
+    document.getElementById('pdmNum').textContent = `#${player.number}`;
+    const color = playerColor(player);
+    document.getElementById('playerDetailModal').style.setProperty('--color', color);
+
+    // Tabs
+    document.querySelectorAll('.pdm-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.pdm-tab-content').forEach(c => c.classList.remove('active'));
+    const activeTab = document.querySelector(`.pdm-tab[data-tab="${defaultTab}"]`);
+    if (activeTab) activeTab.classList.add('active');
+    document.getElementById(`pdm${defaultTab.charAt(0).toUpperCase()+defaultTab.slice(1)}Tab`).classList.add('active');
+
+    renderPdmHitting();
+    renderPdmFielding();
+    document.getElementById('playerDetailOverlay').classList.add('open');
+}
+
+function renderPdmHitting() {
+    const container = document.getElementById('pdmHittingTab');
+    container.innerHTML = '';
+
+    const table = document.createElement('table');
+    table.className = 'pdm-table';
+    table.innerHTML = '<thead><tr><th>Inning</th><th>PA</th><th>At-Bats</th></tr></thead>';
+    const tbody = document.createElement('tbody');
+
+    INNINGS.forEach(i => {
+        const order = getEffectiveOrder(i);
+        const inOrder = order.find(e => e.playerId === pdmPlayerId);
+        if (!inOrder) return; // player not in lineup for this inning
+
+        const stats = battingStats[i] || {};
+        const pas = stats[pdmPlayerId] || [];
+
+        const tr = document.createElement('tr');
+        tr.dataset.inning = i;
+
+        const resultCells = pas.map((pa, paIdx) => {
+            const type = resultType(pa.result);
+            return `<span class="is-result-pill ${resultPillClass(type)}" style="cursor:pointer;">${pa.result || '—'}</span>`;
+        }).join(' ');
+
+        tr.innerHTML = `
+            <td class="muted">Inning ${i}</td>
+            <td>${pas.length}</td>
+            <td>${resultCells || '<span style="color:var(--muted);font-size:11px;">No data</span>'}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // Editable section for current inning
+    ensureStats(currentInning);
+    const curStats = battingStats[currentInning];
+
+    const editSection = document.createElement('div');
+    editSection.style.cssText = 'margin-top:12px;';
+
+    const editTitle = document.createElement('div');
+    editTitle.style.cssText = 'font-family:\'Barlow Condensed\',sans-serif;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;';
+    editTitle.textContent = `Edit — Inning ${currentInning}`;
+    editSection.appendChild(editTitle);
+
+    const pasWrap = document.createElement('div');
+    pasWrap.style.cssText = 'display:flex;flex-direction:column;gap:5px;';
+    editSection.appendChild(pasWrap);
+
+    function renderPaEditors() {
+        pasWrap.innerHTML = '';
+        const pas = battingStats[currentInning][pdmPlayerId] || [];
+        pas.forEach((pa, i) => {
+            const row = document.createElement('div');
+            row.className = 'pdm-edit-row';
+            const lbl = document.createElement('span');
+            lbl.className = 'pdm-edit-label';
+            lbl.textContent = `PA ${i+1}`;
+            const sel = buildResultSelect(pa.result || '', 'pdm-result-select');
+            sel.addEventListener('change', () => {
+                battingStats[currentInning][pdmPlayerId][i].result = sel.value;
+            });
+            const rmBtn = document.createElement('button');
+            rmBtn.className = 'pdm-rm-pa-btn';
+            rmBtn.innerHTML = '<i class="fas fa-times"></i>';
+            rmBtn.addEventListener('click', () => {
+                battingStats[currentInning][pdmPlayerId].splice(i, 1);
+                renderPaEditors();
+            });
+            row.appendChild(lbl);
+            row.appendChild(sel);
+            row.appendChild(rmBtn);
+            pasWrap.appendChild(row);
+        });
+
+        const addBtn = document.createElement('button');
+        addBtn.className = 'pdm-add-pa-btn';
+        addBtn.innerHTML = '<i class="fas fa-plus"></i> Add PA';
+        addBtn.addEventListener('click', () => {
+            if (!battingStats[currentInning][pdmPlayerId]) battingStats[currentInning][pdmPlayerId] = [];
+            battingStats[currentInning][pdmPlayerId].push({ result: '' });
+            renderPaEditors();
+        });
+        pasWrap.appendChild(addBtn);
+    }
+
+    renderPaEditors();
+    table.appendChild(tbody);
+    container.appendChild(table);
+    container.appendChild(editSection);
+}
+
+function renderPdmFielding() {
+    const container = document.getElementById('pdmFieldingTab');
+    container.innerHTML = '';
+
+    const table = document.createElement('table');
+    table.className = 'pdm-table';
+    table.innerHTML = '<thead><tr><th>Inning</th><th>Position</th></tr></thead>';
+    const tbody = document.createElement('tbody');
+
+    INNINGS.forEach(i => {
+        const pos = POS_KEYS.find(p => lineup[i][p] === pdmPlayerId);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="muted">Inning ${i}</td>
+            <td>${pos ? POSITIONS[pos].label + ' (' + pos + ')' : '<span style="color:var(--muted)">Bench</span>'}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    container.appendChild(table);
+}
+
+// Tab switching
+document.querySelectorAll('.pdm-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.pdm-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.pdm-tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        const tabId = `pdm${tab.dataset.tab.charAt(0).toUpperCase()+tab.dataset.tab.slice(1)}Tab`;
+        document.getElementById(tabId).classList.add('active');
+    });
+});
+
+document.getElementById('playerDetailClose').addEventListener('click', () => {
+    document.getElementById('playerDetailOverlay').classList.remove('open');
+});
+document.getElementById('pdmBackBtn').addEventListener('click', () => {
+    document.getElementById('playerDetailOverlay').classList.remove('open');
+    renderInningStatsList();
+});
+document.getElementById('pdmSaveBtn').addEventListener('click', () => {
+    document.getElementById('playerDetailOverlay').classList.remove('open');
+    renderBattingPanel();
+    renderInningStatsList();
+    showToast('Stats saved ✓');
+});
+
+// ═══════════════════════════════════════════════
+//  INIT BATTING SYSTEM
+// ═══════════════════════════════════════════════
+updateSpinner();
+renderBattingPanel();
+
 syncInningLabels();
 // Collapse side panel by default on mobile
 if(window.innerWidth <= 640) togglePanel(false);
