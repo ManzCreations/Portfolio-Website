@@ -9,7 +9,7 @@ from src.config import Config
 from src.data_loader import DataLoader
 from src.logger import setup_logger
 from src.utils import error_response, success_response
-from src.visualization import build_chart
+from src.visualization import build_chart, compute_all_signals
 from src.indicators import IndicatorCalculator
 from src.decision_engine import DecisionEngine
 from src.risk_manager import RiskManager
@@ -82,8 +82,13 @@ def chart():
     # 7. Run initial decision
     decision = _run_decision(df, config, decision_idx)
 
-    # 8. Build chart
-    fig_dict = build_chart(df, config.symbol, decision_idx)
+    # 8. Compute signals across ALL candles for Buy/Sell markers
+    engine   = DecisionEngine(config)
+    risk_mgr = RiskManager(config)
+    signals  = compute_all_signals(df, engine, risk_mgr)
+
+    # 9. Build chart (signals passed in for marker rendering)
+    fig_dict = build_chart(df, config.symbol, decision_idx, signals=signals)
 
     return jsonify(success_response({
         'figure':             fig_dict,

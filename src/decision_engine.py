@@ -40,18 +40,16 @@ class DecisionEngine:
             self._layer_statistical(indicators),
         ]
 
-        # Only layers that fired a trade signal
-        fired = [l for l in layers if l['result'] == 'TRADE']
+        # All 6 layers must fire TRADE — any NO SIGNAL kills the trade
+        if any(l['result'] != 'TRADE' for l in layers):
+            return self._build_result(layers, 'NO TRADE', 'NONE', 'Not all layers confirmed')
 
-        if not fired:
-            return self._build_result(layers, 'NO TRADE', 'NONE', 'No conditions met')
-
-        directions = {l['direction'] for l in fired}
+        directions = {l['direction'] for l in layers}
         if len(directions) > 1:
             return self._build_result(layers, 'NO TRADE', 'NONE', 'Conflicting signals')
 
         direction = directions.pop()
-        reason    = ', '.join(l['reason'] for l in fired)
+        reason = ', '.join(l['reason'] for l in layers)
         return self._build_result(layers, 'TRADE', direction, reason, indicators)
 
     # ------------------------------------------------------------------ #

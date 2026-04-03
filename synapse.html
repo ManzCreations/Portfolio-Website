@@ -259,6 +259,71 @@
         </div>
     </div>
 
+    <!-- SIGNAL DETAIL MODAL -->
+    <div id="signal-modal" style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(0,0,0,0.65);
+        backdrop-filter: blur(4px);
+        align-items: center;
+        justify-content: center;
+    " onclick="closeSignalModal(event)">
+
+        <div style="
+            background: #102A43;
+            border-radius: 18px;
+            border: 1px solid rgba(0,213,255,0.2);
+            padding: 32px;
+            width: 560px;
+            max-width: 92vw;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+        " onclick="event.stopPropagation()">
+
+            <!-- Close button -->
+            <button onclick="closeSignalModal()" style="
+                position: absolute; top: 16px; right: 16px;
+                background: rgba(255,255,255,0.08); border: none; border-radius: 50%;
+                width: 32px; height: 32px; cursor: pointer; color: rgba(255,255,255,0.6);
+                font-size: 16px; line-height: 32px; text-align: center;
+            ">✕</button>
+
+            <!-- Header -->
+            <div id="modal-header" style="display:flex; align-items:center; gap:14px; margin-bottom:24px;">
+                <div id="modal-badge" style="
+                    padding: 6px 20px; border-radius: 20px;
+                    font-size: 15px; font-weight: 800; letter-spacing: 1px;
+                "></div>
+                <div>
+                    <div id="modal-timestamp" style="font-size:13px; color:rgba(255,255,255,0.4); margin-bottom:2px;"></div>
+                    <div id="modal-reason" style="font-size:13px; color:rgba(255,255,255,0.65); font-style:italic;"></div>
+                </div>
+            </div>
+
+            <!-- Risk parameters -->
+            <div id="modal-risk" style="
+                background: rgba(0,0,0,0.25);
+                border-radius: 12px;
+                padding: 16px 20px;
+                margin-bottom: 24px;
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 12px;
+            "></div>
+
+            <!-- Layer breakdown -->
+            <div style="font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:rgba(0,213,255,0.7); margin-bottom:14px;">
+                Decision Layer Breakdown
+            </div>
+            <div id="modal-layers" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+        </div>
+    </div>
+
     <!-- FOOTER -->
     <div class="copyright">
         <p>Copyright &copy; Steven Manz. Made with <i class="fas fa-heart"></i></p>
@@ -412,14 +477,23 @@
                 modeBarButtonsToRemove: ['select2d', 'lasso2d', 'autoScale2d'],
             });
 
-            // ---- CLICK HANDLER — update decision candle ----
+            // ---- CLICK HANDLER — update decision candle OR open signal modal ----
             chartEl.on('plotly_click', async (eventData) => {
                 if (!eventData.points || eventData.points.length === 0) return;
 
-                // Get the clicked candle index from the x category position
-                const clickedIdx = eventData.points[0].pointIndex;
-                if (clickedIdx === currentDecisionIdx) return; // same candle, skip
+                const pt = eventData.points[0];
 
+                // If the clicked trace is a BUY or SELL marker, open the modal
+                if (pt.data && (pt.data.name === 'BUY' || pt.data.name === 'SELL')) {
+                    const raw = pt.customdata;
+                    const signal = (typeof raw === 'string') ? JSON.parse(raw) : raw;
+                    openSignalModal(signal, pt.x);
+                    return;
+                }
+
+                // Otherwise treat as a decision candle click
+                const clickedIdx = pt.pointIndex;
+                if (clickedIdx === currentDecisionIdx) return;
                 await updateDecision(clickedIdx);
             });
 
@@ -599,6 +673,114 @@
             container.appendChild(card);
         });
     }
+
+    // ---- SIGNAL DETAIL MODAL ----
+    function openSignalModal(signal, timestamp) {
+        const isLong  = signal.signal_type === 'LONG';
+        const color   = isLong ? '#26a69a' : '#ef5350';
+        const darkColor = isLong ? '#1a7a6e' : '#b71c1c';
+        const label   = isLong ? '📈 BUY' : '📉 SELL';
+
+        // Badge
+        const badge = document.getElementById('modal-badge');
+        badge.textContent    = label;
+        badge.style.background = isLong ? 'rgba(38,166,154,0.15)' : 'rgba(239,83,80,0.15)';
+        badge.style.border     = `1px solid ${color}`;
+        badge.style.color      = color;
+
+        // Timestamp + reason
+        document.getElementById('modal-timestamp').textContent = timestamp || '';
+        document.getElementById('modal-reason').textContent    = signal.reason || '';
+
+        // Risk parameters grid
+        const fmt = v => (v != null ? `$${parseFloat(v).toFixed(2)}` : '—');
+        const fmtRR = v => (v != null ? `${parseFloat(v).toFixed(2)}:1` : '—');
+        document.getElementById('modal-risk').innerHTML = `
+            <div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Entry</div>
+                <div style="font-size:15px;font-weight:700;color:white;">${fmt(signal.close)}</div>
+            </div>
+            <div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Stop Loss</div>
+                <div style="font-size:15px;font-weight:700;color:#ef5350;">${fmt(signal.stop_loss)}</div>
+            </div>
+            <div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Take Profit</div>
+                <div style="font-size:15px;font-weight:700;color:#26a69a;">${fmt(signal.take_profit)}</div>
+            </div>
+            <div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Partial Exit 1 (50%)</div>
+                <div style="font-size:14px;font-weight:600;color:#FF9800;">${fmt(signal.partial_exit_1)}</div>
+            </div>
+            <div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Partial Exit 2 (25%)</div>
+                <div style="font-size:14px;font-weight:600;color:#FF9800;">${fmt(signal.partial_exit_2)}</div>
+            </div>
+            <div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Risk : Reward</div>
+                <div style="font-size:14px;font-weight:600;color:#00d5ff;">${fmtRR(signal.risk_reward_ratio)}</div>
+            </div>
+        `;
+
+        // Layer breakdown cards
+        const layersEl = document.getElementById('modal-layers');
+        layersEl.innerHTML = '';
+
+        (signal.layers || []).forEach(layer => {
+            const fired      = layer.result === 'TRADE';
+            const layerLong  = layer.direction === 'LONG';
+            const badgeColor = fired ? (layerLong ? '#26a69a' : '#ef5350') : 'rgba(255,255,255,0.2)';
+            const badgeBg    = fired ? (layerLong ? 'rgba(38,166,154,0.12)' : 'rgba(239,83,80,0.12)') : 'rgba(255,255,255,0.05)';
+            const badgeText  = fired ? layer.direction : 'NO SIGNAL';
+
+            const indRows = Object.entries(layer.indicators || {}).map(([k, v]) => `
+                <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+                    <span style="color:rgba(255,255,255,0.4);font-size:11px;">${k}</span>
+                    <span style="color:white;font-size:11px;font-weight:600;">${v}</span>
+                </div>
+            `).join('');
+
+            const card = document.createElement('div');
+            card.style.cssText = `
+                background: rgba(0,0,0,0.2);
+                border-radius: 10px;
+                padding: 14px 16px;
+                border: 1px solid ${fired ? badgeColor + '40' : 'rgba(255,255,255,0.06)'};
+            `;
+            card.innerHTML = `
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div>
+                        <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(0,213,255,0.6);">Layer ${layer.layer}</span>
+                        <span style="font-size:13px;font-weight:700;color:white;margin-left:8px;">${layer.name}</span>
+                    </div>
+                    <div style="padding:3px 12px;border-radius:14px;background:${badgeBg};border:1px solid ${badgeColor};color:${badgeColor};font-size:11px;font-weight:700;">${badgeText}</div>
+                </div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:8px;font-style:italic;">${layer.reason}</div>
+                <div>${indRows}</div>
+            `;
+            layersEl.appendChild(card);
+        });
+
+        // Show modal
+        const modal = document.getElementById('signal-modal');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSignalModal(event) {
+        // If called from backdrop click, only close if the backdrop itself was clicked
+        if (event && event.target !== document.getElementById('signal-modal')) return;
+        document.getElementById('signal-modal').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            document.getElementById('signal-modal').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    });
 
     function showWarning(msg) {
         const warn = document.getElementById('validation-warning');
